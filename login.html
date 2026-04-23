@@ -593,20 +593,11 @@
       </p>
 
       <div class="stats-strip">
-        <div class="stat-item">
-          <span class="stat-val">Live</span>
-          <span class="stat-lbl">Real-time Sync</span>
-        </div>
+        <div class="stat-item"><span class="stat-val">Live</span><span class="stat-lbl">Real-time Sync</span></div>
         <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-val">PDF</span>
-          <span class="stat-lbl">Export Ready</span>
-        </div>
+        <div class="stat-item"><span class="stat-val">PDF</span><span class="stat-lbl">Export Ready</span></div>
         <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-val">15%</span>
-          <span class="stat-lbl">VAT Auto-calc</span>
-        </div>
+        <div class="stat-item"><span class="stat-val">15%</span><span class="stat-lbl">VAT Auto-calc</span></div>
       </div>
 
       <div class="feature-pills">
@@ -622,7 +613,6 @@
   </div>
 
   <div class="right-panel">
-
     <div class="dm-toggle" id="dmToggle" title="Toggle theme">
       <button class="dm-btn" id="btnLight" onclick="setTheme('light')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -697,7 +687,7 @@
         Looking for the mechanic app?
         <a href="https://vynixpanelb-mech.web.app" target="_blank">Open Mechanic Portal →</a>
         <br><br>
-        <span>© 2025 VynixPanelB · All rights reserved</span>
+        <span>© 2026 VynixPanelB · All rights reserved</span>
       </div>
     </div>
   </div>
@@ -717,7 +707,6 @@
   };
   if (!firebase.apps.length) firebase.initializeApp(FC);
   const auth = firebase.auth();
-  const db = firebase.database();
   const gp = new firebase.auth.GoogleAuthProvider();
 
   /* ─── THEME ─── */
@@ -729,32 +718,22 @@
     document.getElementById('btnDark').classList.toggle('active', t === 'dark');
   }
 
-  // Init theme
   const savedDark = localStorage.getItem('vynix_admin_dark');
   const isDark = savedDark !== null ? JSON.parse(savedDark) : true;
   setTheme(isDark ? 'dark' : 'light');
 
   /* ─── ROUTE GUARD ─── */
-  // If the user is already logged in, redirect them immediately to index.html
   auth.onAuthStateChanged(user => {
     const overlay = document.getElementById('loadingOverlay');
-    
     if (user) {
-      // User is logged in — Redirect immediately to index.html
       if (overlay) {
-        overlay.classList.remove('hidden'); // Ensure overlay is visible during redirect
+        overlay.classList.remove('hidden'); 
         const textEl = document.getElementById('overlayText');
         if (textEl) textEl.textContent = 'Redirecting…';
       }
       setTimeout(() => { window.location.href = 'index.html'; }, 400);
-      
     } else {
-      // Not logged in — Hide the overlay to let them interact with the login page
-      if (overlay) {
-        overlay.classList.add('hidden');
-        // We purposely DO NOT use overlay.remove() here. We just hide it with CSS.
-        // If they click 'Sign In', we want the redirect to look smooth.
-      }
+      if (overlay) overlay.classList.add('hidden');
     }
   });
 
@@ -768,17 +747,15 @@
     btnText.textContent = 'Authenticating…';
     btn.querySelector('svg').style.display = 'none';
     
-    // Add spinner
     const spinner = document.createElement('div');
     spinner.className = 'spinner';
     btn.insertBefore(spinner, btn.firstChild);
     errorMsg.style.display = 'none';
 
     try {
-      // Google popup sign-in
       await auth.signInWithPopup(gp);
       btnText.textContent = 'Redirecting to dashboard…';
-      window.location.href = 'index.html'; // Force redirect manually here to guarantee execution
+      window.location.href = 'index.html'; 
     } catch (err) {
       btn.disabled = false;
       btnText.textContent = 'Continue with Google';
