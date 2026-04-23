@@ -53,7 +53,6 @@
     @keyframes overlayIn{0%{opacity:0}100%{opacity:1}}
     @keyframes modalIn{0%{opacity:0;transform:translate(-50%,-46%) scale(0.95)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
     @keyframes badgePop{0%{transform:scale(0.7);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
-    @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(77,123,255,0.4)}70%{box-shadow:0 0 0 10px rgba(77,123,255,0)}100%{box-shadow:0 0 0 0 rgba(77,123,255,0)}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     .anim-up{animation:slideUp .32s cubic-bezier(.16,1,.3,1) forwards}
     .skel{background:linear-gradient(90deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.03) 100%);background-size:500px 100%;animation:shimmer 1.6s infinite;border-radius:12px}
@@ -94,7 +93,6 @@
 
     @media print{body *{visibility:hidden}.print-area,.print-area *{visibility:visible}.print-area{position:fixed;top:0;left:0;width:100%;padding:20px}button{display:none!important}}
     input[type=number]::-webkit-inner-spin-button{opacity:1}
-    .new-job-ring{animation:ringPulse 1.5s infinite}
   </style>
 </head>
 <body>
@@ -113,20 +111,16 @@
 <div id="root"></div>
 
 <script>
-  /* ─── FIREBASE INIT (before React) ─── */
+  /* ─── FIREBASE INIT ─── */
   const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
   if(!firebase.apps.length) firebase.initializeApp(FC);
 
   /* ─── ROUTE GUARD ─── */
   firebase.auth().onAuthStateChanged(function(user) {
     if (!user) {
-      // Not logged in — redirect to login page immediately
       document.getElementById('authGateText').textContent = 'Redirecting to login…';
-      setTimeout(function() {
-        window.location.href = 'login.html';
-      }, 700);
+      setTimeout(function() { window.location.href = 'login.html'; }, 700);
     } else {
-      // Logged in — hide gate and show dashboard
       const gate = document.getElementById('authGate');
       gate.classList.add('hidden');
       setTimeout(function() { gate.remove(); }, 500);
@@ -153,18 +147,7 @@ const LABOR=750;
 const CAR_DB={
   "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"],"2012-2015":["1KD-FTV 3.0L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]},"Yaris":{"2020-2023":["1KR-FE 1.0L","1NR-FE 1.3L"]},"Land Cruiser":{"2008-2023":["1VD-FTV 4.5L V8 Diesel","1GR-FE 4.0L V6"]}},
   "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"],"2010-2017":["CHYA 1.2L TSI","CJZC 1.4L TSI"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"],"2013-2019":["CZCA 1.4L TSI","CHHB 2.0L GTI"]},"Tiguan":{"2016-2023":["CZPB 1.4L TSI","DFHA 2.0L TSI 4Motion"]},"Passat":{"2015-2023":["CZPA 1.4L TSI","CZRA 2.0L TDI"]},"Amarok":{"2011-2023":["CSHA 2.0L BiTDI","CDCA 3.0L TDI V6"]}},
-  "Ford":{"Ranger":{"2019-2023":["EURO 2.0L EcoBlue","P4AT 2.2L TDCi","P5AT 3.2L TDCi"],"2012-2018":["TBWA 2.2L TDCi","TTVA 3.2L TDCi"]},"Fiesta":{"2017-2023":["B6JE 1.0L EcoBoost","SNJB 1.1L Ti-VCT"]},"Focus":{"2018-2023":["M8MA 1.0L EcoBoost","JTDA 1.5L EcoBoost"]},"Mustang":{"2015-2023":["5.0L V8 Coyote","2.3L EcoBoost"]},"Everest":{"2016-2023":["P4AT 2.2L TDCi","P5AT 3.2L TDCi"]}},
-  "BMW":{"3 Series":{"2019-2023":["B48B20 2.0L","B58B30 3.0L"],"2012-2018":["N20B20 2.0L","N55B30 3.0L"]},"5 Series":{"2017-2023":["B48B20 2.0L","B57D30 3.0L Diesel"]},"X3":{"2018-2023":["B48B20 2.0L xDrive20i","B47D20 2.0L xDrive20d"]},"X5":{"2019-2023":["B58B30 3.0L","N63B44T3 4.4L V8"]},"1 Series":{"2020-2023":["B38B15 1.5L","B48B20 2.0L"]}},
-  "Mercedes-Benz":{"C-Class":{"2019-2023":["M264 2.0L","OM654 2.0L Diesel"],"2014-2018":["M274 2.0L","OM651 2.1L Diesel"]},"E-Class":{"2017-2023":["M256 3.0L","OM656 3.0L Diesel"]},"GLC":{"2016-2023":["M274 2.0L","OM651 2.1L Diesel"]},"A-Class":{"2019-2023":["M282 1.3L","M260 2.0L"]},"Sprinter":{"2019-2023":["OM651 2.1L","OM642 3.0L V6"]}},
-  "Nissan":{"Navara":{"2016-2023":["YD25DDTi 2.5L Diesel"],"2005-2015":["YD25DDTi 2.5L","VQ40DE 4.0L"]},"X-Trail":{"2014-2023":["MR20DD 2.0L","R9M 1.6L dCi"]},"Almera":{"2020-2023":["HR15DE 1.5L"]},"NP300":{"2015-2023":["YS23DDT 2.3L Diesel"]},"GTR":{"2009-2023":["VR38DETT 3.8L V6 Twin-Turbo"]}},
-  "Honda":{"Civic":{"2017-2023":["L15B7 1.5L VTEC Turbo","K20C2 2.0L"]},"Jazz":{"2015-2023":["L15Z1 1.5L i-VTEC"]},"CR-V":{"2017-2023":["L15B7 1.5L VTEC Turbo"]},"BR-V":{"2016-2023":["L15Z2 1.5L i-VTEC"]}},
-  "Hyundai":{"i20":{"2021-2023":["G3LE 1.0L T-GDI","G4LD 1.2L"],"2015-2020":["G4LA 1.2L","G4LC 1.4L"]},"Tucson":{"2021-2023":["G4NA 2.0L","D4HB 2.0L CRDi"]},"Santa Fe":{"2019-2023":["G4KH 2.0L T-GDI","D4HB 2.0L CRDi"]},"H1":{"2015-2023":["D4CB 2.5L CRDi"]},"Creta":{"2022-2023":["G4FG 1.5L","G4LC 1.4L T-GDI"]}},
-  "Kia":{"Sportage":{"2022-2023":["G4FP 1.6L T-GDI","D4FE 1.6L CRDi"]},"Seltos":{"2020-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Sonet":{"2021-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Picanto":{"2017-2023":["G3LA 1.0L","G4LA 1.2L"]}},
-  "Isuzu":{"D-Max":{"2020-2023":["4JJ3-TCX 1.9L","4JJ1-TCX 3.0L"],"2013-2019":["4JJ1-TC 2.5L","4JK1-TC 2.5L"]},"mu-X":{"2014-2023":["4JJ1-TCX 3.0L"]}},
-  "Mazda":{"CX-5":{"2017-2023":["SkyActiv-G 2.0L","SkyActiv-G 2.5L","SkyActiv-D 2.2L"]},"Mazda 3":{"2019-2023":["SkyActiv-G 2.0L","SkyActiv-X 2.0L"]},"BT-50":{"2012-2023":["WL-C 2.5L","P5-VPS 3.2L"]}},
-  "Peugeot":{"208":{"2020-2023":["PureTech 100 1.2L","BlueHDi 100 1.5L"]},"2008":{"2020-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]},"308":{"2014-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]}},
-  "Renault":{"Duster":{"2018-2023":["H4B 0.9L TCe","K9K 1.5L dCi"]},"Kwid":{"2018-2023":["D4F 1.0L SCe"]},"Sandero":{"2013-2023":["H4B 0.9L TCe","K4M 1.6L"]}},
-  "Suzuki":{"Swift":{"2018-2023":["K12C 1.2L DualJet","K10C 1.0L BoosterJet"]},"Vitara":{"2015-2023":["K14B 1.4L BoosterJet","K15B 1.5L"]},"Jimny":{"2018-2023":["K15B 1.5L"]}}
+  "Ford":{"Ranger":{"2019-2023":["EURO 2.0L EcoBlue","P4AT 2.2L TDCi","P5AT 3.2L TDCi"],"2012-2018":["TBWA 2.2L TDCi","TTVA 3.2L TDCi"]},"Fiesta":{"2017-2023":["B6JE 1.0L EcoBoost","SNJB 1.1L Ti-VCT"]},"Focus":{"2018-2023":["M8MA 1.0L EcoBoost","JTDA 1.5L EcoBoost"]},"Mustang":{"2015-2023":["5.0L V8 Coyote","2.3L EcoBoost"]},"Everest":{"2016-2023":["P4AT 2.2L TDCi","P5AT 3.2L TDCi"]}}
 };
 
 /* ─── ICONS ─── */
@@ -347,22 +330,24 @@ function JobsView({shopInfo}){
   const [filter,setFilter]=useState('all');
   const [search,setSearch]=useState('');
   const [selected,setSelected]=useState(null);
-  const [prevCount,setPrevCount]=useState(0);
+  const prevCountRef = useRef(0);
   const [newAlert,setNewAlert]=useState(false);
   
   useEffect(()=>{
     // Increased to 500 to ensure all data is visible
     const ref=db.ref('workshop_jobs').limitToLast(500);
-    ref.on('value',snap=>{
+    // FIX: Assign callback to variable to properly unmount
+    const cb = ref.on('value',snap=>{
       if(!snap.exists()){setJobs([]);return;}
       const arr=[];
       snap.forEach(c=>arr.push({id:c.key,...c.val()}));
       arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-      if(arr.length>prevCount&&prevCount>0)setNewAlert(true);
-      setPrevCount(arr.length);
+      if(arr.length > prevCountRef.current && prevCountRef.current > 0) setNewAlert(true);
+      prevCountRef.current = arr.length;
       setJobs(arr);
     });
-    return()=>ref.off();
+    // FIX: Explicitly kill only THIS specific listener to prevent silent app breaks
+    return()=>ref.off('value', cb);
   },[]);
   
   useEffect(()=>{if(newAlert){const t=setTimeout(()=>setNewAlert(false),4000);return()=>clearTimeout(t);}},[newAlert]);
@@ -422,7 +407,8 @@ function OverviewView({shopInfo}){
   useEffect(()=>{
     // Increased to 500 to ensure all data is visible for analytics
     const ref=db.ref('workshop_jobs').limitToLast(500);
-    ref.on('value',snap=>{
+    // FIX: Assign callback to variable to properly unmount
+    const cb = ref.on('value',snap=>{
       if(!snap.exists()){setJobs([]);setRecent([]);return;}
       const arr=[];
       snap.forEach(c=>arr.push({id:c.key,...c.val()}));
@@ -430,7 +416,8 @@ function OverviewView({shopInfo}){
       setJobs(arr);
       setRecent(arr.slice(0,5)); // Show only 5 most recent on dashboard cards
     });
-    return()=>ref.off();
+    // FIX: Explicitly kill only THIS specific listener
+    return()=>ref.off('value', cb);
   },[]);
   
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
@@ -555,8 +542,9 @@ function App(){
 
   useEffect(()=>{
     const ref=db.ref('workshop_jobs');
-    ref.on('value',snap=>{let c=0;snap.forEach(j=>{if(j.val().status==='pending_approval')c++;});setPendingCount(c);});
-    return()=>ref.off();
+    // FIX: Assign callback to variable to properly unmount and prevent silent breaking
+    const cb = ref.on('value',snap=>{let c=0;snap.forEach(j=>{if(j.val().status==='pending_approval')c++;});setPendingCount(c);});
+    return()=>ref.off('value', cb);
   },[]);
 
   if(!ready||!user) return null; // Auth gate overlay handles this state
