@@ -81,7 +81,6 @@
     .search-input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:9px 16px 9px 40px;outline:none;font-family:'Inter',sans-serif;font-size:13px;width:100%;transition:all .2s}
     .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
 
-    /* ── AUTH LOADING OVERLAY ── */
     .auth-gate{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity .4s ease}
     .auth-gate.hidden{opacity:0;pointer-events:none}
     .auth-gate-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 16px 50px var(--accent-glow)}
@@ -145,22 +144,23 @@ const auth=firebase.auth(), db=firebase.database(), gp=new firebase.auth.GoogleA
 
 const LABOR=750;
 
-/* ─── CAR DATABASE ─── */
-const CAR_DB={
-  "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"],"2012-2015":["1KD-FTV 3.0L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]},"Yaris":{"2020-2023":["1KR-FE 1.0L","1NR-FE 1.3L"]},"Land Cruiser":{"2008-2023":["1VD-FTV 4.5L V8 Diesel","1GR-FE 4.0L V6"]}},
-  "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"],"2010-2017":["CHYA 1.2L TSI","CJZC 1.4L TSI"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"],"2013-2019":["CZCA 1.4L TSI","CHHB 2.0L GTI"]},"Tiguan":{"2016-2023":["CZPB 1.4L TSI","DFHA 2.0L TSI 4Motion"]},"Passat":{"2015-2023":["CZPA 1.4L TSI","CZRA 2.0L TDI"]},"Amarok":{"2011-2023":["CSHA 2.0L BiTDI","CDCA 3.0L TDI V6"]}},
-  "Ford":{"Ranger":{"2019-2023":["EURO 2.0L EcoBlue","P4AT 2.2L TDCi","P5AT 3.2L TDCi"],"2012-2018":["TBWA 2.2L TDCi","TTVA 3.2L TDCi"]},"Fiesta":{"2017-2023":["B6JE 1.0L EcoBoost","SNJB 1.1L Ti-VCT"]},"Focus":{"2018-2023":["M8MA 1.0L EcoBoost","JTDA 1.5L EcoBoost"]},"Mustang":{"2015-2023":["5.0L V8 Coyote","2.3L EcoBoost"]},"Everest":{"2016-2023":["P4AT 2.2L TDCi","P5AT 3.2L TDCi"]}},
-  "BMW":{"3 Series":{"2019-2023":["B48B20 2.0L","B58B30 3.0L"],"2012-2018":["N20B20 2.0L","N55B30 3.0L"]},"5 Series":{"2017-2023":["B48B20 2.0L","B57D30 3.0L Diesel"]},"X3":{"2018-2023":["B48B20 2.0L xDrive20i","B47D20 2.0L xDrive20d"]},"X5":{"2019-2023":["B58B30 3.0L","N63B44T3 4.4L V8"]},"1 Series":{"2020-2023":["B38B15 1.5L","B48B20 2.0L"]}},
-  "Mercedes-Benz":{"C-Class":{"2019-2023":["M264 2.0L","OM654 2.0L Diesel"],"2014-2018":["M274 2.0L","OM651 2.1L Diesel"]},"E-Class":{"2017-2023":["M256 3.0L","OM656 3.0L Diesel"]},"GLC":{"2016-2023":["M274 2.0L","OM651 2.1L Diesel"]},"A-Class":{"2019-2023":["M282 1.3L","M260 2.0L"]},"Sprinter":{"2019-2023":["OM651 2.1L","OM642 3.0L V6"]}},
-  "Nissan":{"Navara":{"2016-2023":["YD25DDTi 2.5L Diesel"],"2005-2015":["YD25DDTi 2.5L","VQ40DE 4.0L"]},"X-Trail":{"2014-2023":["MR20DD 2.0L","R9M 1.6L dCi"]},"Almera":{"2020-2023":["HR15DE 1.5L"]},"NP300":{"2015-2023":["YS23DDT 2.3L Diesel"]},"GTR":{"2009-2023":["VR38DETT 3.8L V6 Twin-Turbo"]}},
-  "Honda":{"Civic":{"2017-2023":["L15B7 1.5L VTEC Turbo","K20C2 2.0L"]},"Jazz":{"2015-2023":["L15Z1 1.5L i-VTEC"]},"CR-V":{"2017-2023":["L15B7 1.5L VTEC Turbo"]},"BR-V":{"2016-2023":["L15Z2 1.5L i-VTEC"]}},
-  "Hyundai":{"i20":{"2021-2023":["G3LE 1.0L T-GDI","G4LD 1.2L"],"2015-2020":["G4LA 1.2L","G4LC 1.4L"]},"Tucson":{"2021-2023":["G4NA 2.0L","D4HB 2.0L CRDi"]},"Santa Fe":{"2019-2023":["G4KH 2.0L T-GDI","D4HB 2.0L CRDi"]},"H1":{"2015-2023":["D4CB 2.5L CRDi"]},"Creta":{"2022-2023":["G4FG 1.5L","G4LC 1.4L T-GDI"]}},
-  "Kia":{"Sportage":{"2022-2023":["G4FP 1.6L T-GDI","D4FE 1.6L CRDi"]},"Seltos":{"2020-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Sonet":{"2021-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Picanto":{"2017-2023":["G3LA 1.0L","G4LA 1.2L"]}},
-  "Isuzu":{"D-Max":{"2020-2023":["4JJ3-TCX 1.9L","4JJ1-TCX 3.0L"],"2013-2019":["4JJ1-TC 2.5L","4JK1-TC 2.5L"]},"mu-X":{"2014-2023":["4JJ1-TCX 3.0L"]}},
-  "Mazda":{"CX-5":{"2017-2023":["SkyActiv-G 2.0L","SkyActiv-G 2.5L","SkyActiv-D 2.2L"]},"Mazda 3":{"2019-2023":["SkyActiv-G 2.0L","SkyActiv-X 2.0L"]},"BT-50":{"2012-2023":["WL-C 2.5L","P5-VPS 3.2L"]}},
-  "Peugeot":{"208":{"2020-2023":["PureTech 100 1.2L","BlueHDi 100 1.5L"]},"2008":{"2020-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]},"308":{"2014-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]}},
-  "Renault":{"Duster":{"2018-2023":["H4B 0.9L TCe","K9K 1.5L dCi"]},"Kwid":{"2018-2023":["D4F 1.0L SCe"]},"Sandero":{"2013-2023":["H4B 0.9L TCe","K4M 1.6L"]}},
-  "Suzuki":{"Swift":{"2018-2023":["K12C 1.2L DualJet","K10C 1.0L BoosterJet"]},"Vitara":{"2015-2023":["K14B 1.4L BoosterJet","K15B 1.5L"]},"Jimny":{"2018-2023":["K15B 1.5L"]}}
+/* ─── DEFAULT DATABASE (Used to seed Firebase if empty) ─── */
+const DEFAULT_CAR_DB={
+  "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]}},
+  "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"]}}
+};
+
+const DEFAULT_SERVICE_CATALOG = {
+  "Routine Maintenance": [
+    {id:"oil-change",name:"Engine Oil & Filter Change",price:450,labor:1.0,parts:["Engine Oil (5L)","Oil Filter"],icon:"🛢"},
+    {id:"air-filter",name:"Air Filter Replacement",price:320,labor:0.5,parts:["Air Filter"],icon:"💨"},
+    {id:"cabin-filter",name:"Cabin Air Filter",price:280,labor:0.5,parts:["Cabin Filter"],icon:"🌬"},
+    {id:"spark-plugs",name:"Spark Plug Replacement",price:180,labor:1.5,parts:["Spark Plugs (x4)"],icon:"⚡"}
+  ],
+  "Brakes": [
+    {id:"brake-pads-front",name:"Front Brake Pad Replacement",price:850,labor:1.5,parts:["Front Brake Pads (Set)"],icon:"🔴"},
+    {id:"brake-discs-front",name:"Front Brake Disc Replacement",price:1200,labor:2.0,parts:["Front Brake Discs (Pair)"],icon:"⚙"}
+  ]
 };
 
 /* ─── ICONS ─── */
@@ -177,6 +177,8 @@ const IDB=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox
 const IScreenLight=()=><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>;
 const ICircuitDark=()=><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>;
 const ISparkle=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 3l1.5 4L10 9 6.5 10.5 5 15l-1.5-4.5L0 9l3.5-1.5L5 3zM19 3l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/></svg>;
+const IPlus=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14"/></svg>;
+const ISave=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>;
 
 function DarkModePill({dark,onToggle}){
   return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
@@ -301,38 +303,171 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
   );
 }
 
-/* ─── CAR DATABASE VIEW ─── */
-function CarDatabaseView(){
-  const [selectedMake,setSelectedMake]=useState(Object.keys(CAR_DB)[0]);
+/* ─── SYSTEM DATABASE VIEW ─── */
+function SystemDatabaseView({ systemData }){
+  const [tab, setTab] = useState('vehicles');
+  const carDB = systemData?.car_db || {};
+  const services = systemData?.services || {};
+
+  /* Vehicle Tab State */
+  const [selectedMake,setSelectedMake]=useState(Object.keys(carDB)[0] || '');
   const [selectedModel,setSelectedModel]=useState('');
-  const [searchQ,setSearchQ]=useState('');
-  const makes=Object.keys(CAR_DB).sort();
-  const models=selectedMake?Object.keys(CAR_DB[selectedMake]||{}).sort():[];
-  useEffect(()=>{setSelectedModel(models[0]||'');},[selectedMake]);
-  const yearRanges=selectedMake&&selectedModel?Object.entries(CAR_DB[selectedMake]?.[selectedModel]||{}):[];
-  const SERVICE_PARTS={"Engine Oil & Filter":["Engine Oil (5L)","Oil Filter","Drain Plug Washer"],"Air Filter":["Air Filter Element"],"Cabin Filter":["Cabin Air Filter / Pollen Filter"],"Spark Plugs":["Iridium Spark Plugs x4","Copper Spark Plugs x4"],"Fuel Filter":["Inline Fuel Filter","In-tank Fuel Filter"],"Brake Pads":["Front Brake Pad Set","Rear Brake Pad Set","Brake Pad Shim Kit"],"Brake Discs":["Front Brake Disc Pair","Rear Brake Disc Pair","Brake Caliper Bolt Kit"],"Brake Fluid":["DOT3 Brake Fluid","DOT4 Brake Fluid","DOT5.1 Brake Fluid"],"Coolant":["OAT Coolant 5L","HOAT Coolant 5L","IAT Green Coolant 5L"],"Thermostat":["Engine Thermostat","Thermostat Housing Gasket","Coolant Temperature Sensor"],"Water Pump":["Water Pump Assembly","Water Pump Gasket","Water Pump O-Ring"],"Timing Belt":["Timing Belt","Timing Belt Tensioner","Timing Belt Idler Pulley","Water Pump (belt-driven)"],"Shock Absorbers":["Front Shock Absorber x2","Rear Shock Absorber x2","Strut Mount Kit","Bump Stop Rubber"],"Wheel Bearings":["Front Hub Wheel Bearing","Rear Hub Wheel Bearing","ABS Reluctor Ring"],"Ball Joints":["Lower Ball Joint","Upper Ball Joint","Ball Joint Boot Kit"],"CV Axle":["Front CV Axle Shaft","Inner CV Boot Kit","Outer CV Boot Kit","CV Joint Grease"],"Battery":["12V AGM Battery 60Ah","12V EFB Battery 70Ah","Battery Terminal Connectors"],"Alternator":["Alternator Assembly","Alternator Drive Belt","Alternator Brush Kit"],"Starter Motor":["Starter Motor Assembly","Starter Motor Solenoid"],"Glow Plugs":["Diesel Glow Plug x4","Glow Plug Control Module"],"Clutch Kit":["Clutch Disc","Pressure Plate","Release Bearing","Pilot Bearing","Flywheel Resurfacing"],"Transmission Fluid":["ATF Dexron VI 4L","Manual Gearbox Oil 75W90 2L","Dual-Clutch Fluid DSG"]};
-  const filteredParts=useMemo(()=>{if(!searchQ.trim()) return Object.entries(SERVICE_PARTS);const q=searchQ.toLowerCase();return Object.entries(SERVICE_PARTS).filter(([k,v])=>k.toLowerCase().includes(q)||v.some(p=>p.toLowerCase().includes(q)));},[searchQ]);
+  
+  /* Add Vehicle Form State */
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newMake, setNewMake] = useState('');
+  const [newModel, setNewModel] = useState('');
+  const [newYear, setNewYear] = useState('');
+  const [newEngine, setNewEngine] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  /* Pricing Tab State */
+  const [localServices, setLocalServices] = useState(services);
+  const [savingPrices, setSavingPrices] = useState(false);
+  
+  useEffect(()=>{ setLocalServices(services); },[services]);
+
+  const makes=Object.keys(carDB).sort();
+  const models=selectedMake?Object.keys(carDB[selectedMake]||{}).sort():[];
+  useEffect(()=>{setSelectedModel(models[0]||'');},[selectedMake, models]);
+  const yearRanges=selectedMake&&selectedModel?Object.entries(carDB[selectedMake]?.[selectedModel]||{}):[];
+
+  const handleAddVehicle = async () => {
+    if(!newMake || !newModel || !newYear || !newEngine) return alert("Please fill all fields.");
+    setAdding(true);
+    try {
+      const path = `system/car_db/${newMake.trim()}/${newModel.trim()}/${newYear.trim()}`;
+      const ref = db.ref(path);
+      const snap = await ref.once('value');
+      const currentEngines = snap.exists() ? snap.val() : [];
+      if(!currentEngines.includes(newEngine.trim())) {
+        currentEngines.push(newEngine.trim());
+        await ref.set(currentEngines);
+      }
+      setShowAddForm(false);
+      setNewMake(''); setNewModel(''); setNewYear(''); setNewEngine('');
+      setSelectedMake(newMake.trim());
+    } catch(e) { alert(e.message); }
+    setAdding(false);
+  };
+
+  const handlePriceChange = (category, svcId, newPrice) => {
+    const val = parseInt(newPrice, 10);
+    setLocalServices(prev => ({
+      ...prev,
+      [category]: prev[category].map(s => s.id === svcId ? { ...s, price: isNaN(val) ? 0 : val } : s)
+    }));
+  };
+
+  const savePrices = async () => {
+    setSavingPrices(true);
+    try {
+      await db.ref('system/services').set(localServices);
+      setTimeout(()=> setSavingPrices(false), 800);
+    } catch(e) { alert(e.message); setSavingPrices(false); }
+  };
+
   return(
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
-      <div><h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Vehicle & Parts Database</h2><p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Browse all supported vehicles and their compatible service parts</p></div>
-      <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,height:500}}>
-        <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,overflow:'hidden',display:'flex',flexDirection:'column'}}>
-          <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)'}}><p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:0,letterSpacing:'1px'}}>MAKE ({makes.length})</p></div>
-          <div style={{overflowY:'auto',flex:1}}>
-            {makes.map(m=><div key={m} onClick={()=>setSelectedMake(m)} style={{padding:'10px 16px',cursor:'pointer',fontSize:13,fontWeight:600,transition:'background .12s',background:m===selectedMake?'rgba(77,123,255,0.12)':'transparent',color:m===selectedMake?'var(--accent)':'var(--text2)',borderLeft:m===selectedMake?'3px solid var(--accent)':'3px solid transparent'}}>{m}</div>)}
-          </div>
-        </div>
-        <div style={{display:'flex',flexDirection:'column',gap:12,overflow:'hidden'}}>
-          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{models.map(m=><button key={m} className={`tab-btn ${m===selectedModel?'active':''}`} onClick={()=>setSelectedModel(m)}>{m}</button>)}</div>
-          <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,flex:1,overflow:'auto',padding:16}}>
-            {selectedModel?(<><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,var(--accent),var(--accent2))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><ICar/></div><div><p style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>{selectedMake} {selectedModel}</p><p style={{fontSize:11,color:'var(--text3)',margin:0}}>{yearRanges.length} generation(s) in database</p></div></div>{yearRanges.map(([yr,engines])=><div key={yr} style={{marginBottom:12,padding:'12px 14px',borderRadius:14,background:'var(--input-bg)',border:'1px solid var(--border)'}}><p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--cyan)',margin:'0 0 8px',letterSpacing:'0.5px'}}>{yr}</p><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{engines.map(e=><span key={e} className="tag">{e}</span>)}</div></div>)}</>):<p style={{color:'var(--text3)',fontSize:13}}>Select a model above.</p>}
-          </div>
-        </div>
-      </div>
       <div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Service Parts Catalogue</h3><div style={{position:'relative'}}><div style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div><input className="search-input" style={{paddingLeft:36,width:220}} placeholder="Search parts…" value={searchQ} onChange={e=>setSearchQ(e.target.value)}/></div></div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:10}}>{filteredParts.map(([category,parts])=><div key={category} className="car-db-row"><p style={{fontSize:12,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>{category}</p><div style={{display:'flex',flexDirection:'column',gap:4}}>{parts.map(p=><div key={p} style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:5,height:5,borderRadius:'50%',background:'var(--accent)',flexShrink:0}}/><span style={{fontSize:12,color:'var(--text2)'}}>{p}</span></div>)}</div></div>)}</div>
+        <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>System Database</h2>
+        <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Manage vehicles and service pricing across the entire platform.</p>
       </div>
+
+      <div style={{display:'flex',gap:6,borderBottom:'1px solid var(--border)',paddingBottom:12}}>
+        <button className={`tab-btn ${tab==='vehicles'?'active':''}`} onClick={()=>setTab('vehicles')}>Vehicle Directory</button>
+        <button className={`tab-btn ${tab==='pricing'?'active':''}`} onClick={()=>setTab('pricing')}>Services & Pricing</button>
+      </div>
+
+      {tab === 'vehicles' && (
+        <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,height:500}}>
+          <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+            <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)'}}>
+              <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:0,letterSpacing:'1px'}}>MAKE ({makes.length})</p>
+            </div>
+            <div style={{overflowY:'auto',flex:1}}>
+              {makes.map(m=><div key={m} onClick={()=>setSelectedMake(m)} style={{padding:'10px 16px',cursor:'pointer',fontSize:13,fontWeight:600,transition:'background .12s',background:m===selectedMake?'rgba(77,123,255,0.12)':'transparent',color:m===selectedMake?'var(--accent)':'var(--text2)',borderLeft:m===selectedMake?'3px solid var(--accent)':'3px solid transparent'}}>{m}</div>)}
+            </div>
+          </div>
+          
+          <div style={{display:'flex',flexDirection:'column',gap:12,overflow:'hidden'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{models.map(m=><button key={m} className={`tab-btn ${m===selectedModel?'active':''}`} onClick={()=>setSelectedModel(m)}>{m}</button>)}</div>
+              <button className="btn-p" onClick={()=>setShowAddForm(!showAddForm)} style={{padding:'7px 14px',fontSize:12}}><IPlus/> Add Vehicle</button>
+            </div>
+            
+            <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,flex:1,overflow:'auto',padding:16}}>
+              {showAddForm ? (
+                <div className="anim-up" style={{background:'var(--input-bg)', border:'1px solid var(--border)', borderRadius:14, padding:20}}>
+                  <h3 style={{fontSize:15,fontWeight:800,marginBottom:14}}>Add New Vehicle to Database</h3>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>MAKE</label><input className="field" value={newMake} onChange={e=>setNewMake(e.target.value)} placeholder="e.g. Toyota" /></div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>MODEL</label><input className="field" value={newModel} onChange={e=>setNewModel(e.target.value)} placeholder="e.g. Hilux" /></div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>YEAR RANGE</label><input className="field" value={newYear} onChange={e=>setNewYear(e.target.value)} placeholder="e.g. 2020-2024" /></div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>ENGINE</label><input className="field" value={newEngine} onChange={e=>setNewEngine(e.target.value)} placeholder="e.g. 2.8L GD-6" /></div>
+                  </div>
+                  <div style={{display:'flex',gap:10}}>
+                    <button className="btn-p" onClick={handleAddVehicle} disabled={adding}>{adding?<ISpin cls="w-4 h-4"/>:'Save to Database'}</button>
+                    <button className="btn-g" onClick={()=>setShowAddForm(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : selectedModel ? (
+                <>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                    <div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,var(--accent),var(--accent2))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><ICar/></div>
+                    <div><p style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>{selectedMake} {selectedModel}</p><p style={{fontSize:11,color:'var(--text3)',margin:0}}>{yearRanges.length} generation(s) in database</p></div>
+                  </div>
+                  {yearRanges.map(([yr,engines])=>(
+                    <div key={yr} style={{marginBottom:12,padding:'12px 14px',borderRadius:14,background:'var(--input-bg)',border:'1px solid var(--border)'}}>
+                      <p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--cyan)',margin:'0 0 8px',letterSpacing:'0.5px'}}>{yr}</p>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>{engines.map(e=><span key={e} className="tag">{e}</span>)}</div>
+                    </div>
+                  ))}
+                </>
+              ) : <p style={{color:'var(--text3)',fontSize:13}}>Select a make and model above.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'pricing' && (
+        <div className="anim-up">
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <p style={{fontSize:13,color:'var(--text2)',margin:0}}>Set the base price in Rand (R) for each service.</p>
+            <button className="btn-p" onClick={savePrices} disabled={savingPrices}>
+              {savingPrices ? <ISpin cls="w-4 h-4" /> : <><ISave/> Save All Prices</>}
+            </button>
+          </div>
+          
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:16}}>
+            {Object.entries(localServices).map(([category, items]) => (
+              <div key={category} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:16}}>
+                <p className="mono" style={{fontSize:10,fontWeight:800,color:'var(--accent)',margin:'0 0 12px',letterSpacing:'0.5px'}}>{category.toUpperCase()}</p>
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  {items.map(svc => (
+                    <div key={svc.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,borderBottom:'1px solid var(--border2)',paddingBottom:8}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <p style={{fontSize:13,fontWeight:600,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{svc.icon} {svc.name}</p>
+                        <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>{svc.labor}h labour</p>
+                      </div>
+                      <div style={{display:'flex',alignItems:'center',gap:6}}>
+                        <span style={{fontSize:13,color:'var(--text2)',fontWeight:600}}>R</span>
+                        <input 
+                          className="field" 
+                          type="number" 
+                          value={svc.price} 
+                          onChange={(e) => handlePriceChange(category, svc.id, e.target.value)}
+                          style={{width:80,padding:'6px 10px',textAlign:'right',fontFamily:'JetBrains Mono',fontWeight:700}}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -409,7 +544,7 @@ function OverviewView({ jobs, shopInfo }){
   const pending=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
   const approved=jobs?jobs.filter(j=>j.status==='approved').length:0;
   const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
-  const recent=jobs?jobs.slice(0,5):null; // Only show 5 on dashboard
+  const recent=jobs?jobs.slice(0,5):null;
   
   const svcCounts=useMemo(()=>{if(!jobs)return[];const c={};jobs.forEach(j=>(j.services||[]).forEach(s=>{c[s.name]=(c[s.name]||0)+1;}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5);},[jobs]);
   
@@ -465,10 +600,7 @@ function SettingsView({user,profile,onSave}){
   const save=async()=>{setSaving(true);try{await db.ref(`users/${user.uid}`).update({name,shop});setSaved(true);setTimeout(()=>setSaved(false),2500);onSave({name,shop});}catch(e){alert(e.message);}setSaving(false);};
 
   const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      window.location.href = 'login.html';
-    } catch(e) { alert(e.message); }
+    try { await auth.signOut(); window.location.href = 'login.html'; } catch(e) { alert(e.message); }
   };
 
   return(
@@ -504,8 +636,9 @@ function App(){
   const [view,setView]=useState('overview');
   const [ready,setReady]=useState(false);
   
-  // SINGLE SOURCE OF TRUTH for data
+  // SINGLE SOURCE OF TRUTH for Jobs & System Rules
   const [jobs, setJobs] = useState(null);
+  const [systemData, setSystemData] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
 
   const [dark,setDark]=useState(()=>{const s=localStorage.getItem('vynix_admin_dark');return s!==null?JSON.parse(s):true;});
@@ -530,7 +663,23 @@ function App(){
     });
   },[]);
 
-  // ONE Master Listener for all Jobs
+  // Central System Settings Listener (Cars & Prices)
+  useEffect(() => {
+    const sysRef = db.ref('system');
+    const sysCb = sysRef.on('value', snap => {
+      if(snap.exists()){
+        setSystemData(snap.val());
+      } else {
+        // Seed Firebase if empty
+        const seed = { car_db: DEFAULT_CAR_DB, services: DEFAULT_SERVICE_CATALOG };
+        sysRef.set(seed);
+        setSystemData(seed);
+      }
+    });
+    return () => sysRef.off('value', sysCb);
+  }, []);
+
+  // Central Jobs Listener
   useEffect(()=>{
     const ref = db.ref('workshop_jobs').limitToLast(500);
     const cb = ref.on('value', snap => {
@@ -550,15 +699,15 @@ function App(){
       setJobs(arr);
       setPendingCount(c);
     });
-    return () => ref.off('value', cb); // Safely kill only this listener
+    return () => ref.off('value', cb);
   },[]);
 
-  if(!ready||!user) return null;
+  if(!ready||!user||!systemData) return null;
 
   const NAV_ITEMS=[
     {id:'overview',l:'Overview',I:IDash},
     {id:'jobs',l:'Workshop Jobs',I:ICar,badge:pendingCount},
-    {id:'database',l:'Car Database',I:IDB},
+    {id:'database',l:'System Database',I:IDB},
     {id:'settings',l:'Settings',I:()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>},
   ];
 
@@ -596,10 +745,9 @@ function App(){
       </nav>
       <main style={{flex:1,padding:'28px 32px',overflowY:'auto',minHeight:'100dvh'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
-          {/* Passing the central jobs state down */}
           {view==='overview'&&<OverviewView jobs={jobs} shopInfo={profile}/>}
           {view==='jobs'&&<JobsView jobs={jobs} shopInfo={profile}/>}
-          {view==='database'&&<CarDatabaseView/>}
+          {view==='database'&&<SystemDatabaseView systemData={systemData} />}
           {view==='settings'&&<SettingsView user={user} profile={profile} onSave={setProfile}/>}
         </div>
       </main>
