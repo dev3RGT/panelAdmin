@@ -551,7 +551,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
       </svg>
     </div>
-    <span class="loading-text">VynixPanelB</span>
+    <span class="loading-text" id="overlayText">VynixPanelB</span>
     <div class="loading-bar"><div class="loading-bar-fill"></div></div>
   </div>
 </div>
@@ -738,14 +738,23 @@
   // If the user is already logged in, redirect them immediately to index.html
   auth.onAuthStateChanged(user => {
     const overlay = document.getElementById('loadingOverlay');
+    
     if (user) {
-      // Already logged in — redirect to dashboard
-      overlay.querySelector('.loading-text').textContent = 'Redirecting…';
-      setTimeout(() => { window.location.href = 'index.html'; }, 600);
+      // User is logged in — Redirect immediately to index.html
+      if (overlay) {
+        overlay.classList.remove('hidden'); // Ensure overlay is visible during redirect
+        const textEl = document.getElementById('overlayText');
+        if (textEl) textEl.textContent = 'Redirecting…';
+      }
+      setTimeout(() => { window.location.href = 'index.html'; }, 400);
+      
     } else {
-      // Show the page
-      overlay.classList.add('hidden');
-      setTimeout(() => overlay.remove(), 500);
+      // Not logged in — Hide the overlay to let them interact with the login page
+      if (overlay) {
+        overlay.classList.add('hidden');
+        // We purposely DO NOT use overlay.remove() here. We just hide it with CSS.
+        // If they click 'Sign In', we want the redirect to look smooth.
+      }
     }
   });
 
@@ -769,8 +778,7 @@
       // Google popup sign-in
       await auth.signInWithPopup(gp);
       btnText.textContent = 'Redirecting to dashboard…';
-      // The auth.onAuthStateChanged listener above will automatically catch this
-      // and redirect to 'index.html' instantly.
+      window.location.href = 'index.html'; // Force redirect manually here to guarantee execution
     } catch (err) {
       btn.disabled = false;
       btnText.textContent = 'Continue with Google';
