@@ -111,7 +111,7 @@
 <div id="root"></div>
 
 <script>
-  /* ─── FIREBASE INIT ─── */
+  /* ─── FIREBASE INIT (before React) ─── */
   const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
   if(!firebase.apps.length) firebase.initializeApp(FC);
 
@@ -119,7 +119,9 @@
   firebase.auth().onAuthStateChanged(function(user) {
     if (!user) {
       document.getElementById('authGateText').textContent = 'Redirecting to login…';
-      setTimeout(function() { window.location.href = 'login.html'; }, 700);
+      setTimeout(function() {
+        window.location.href = 'login.html';
+      }, 700);
     } else {
       const gate = document.getElementById('authGate');
       gate.classList.add('hidden');
@@ -147,7 +149,18 @@ const LABOR=750;
 const CAR_DB={
   "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"],"2012-2015":["1KD-FTV 3.0L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]},"Yaris":{"2020-2023":["1KR-FE 1.0L","1NR-FE 1.3L"]},"Land Cruiser":{"2008-2023":["1VD-FTV 4.5L V8 Diesel","1GR-FE 4.0L V6"]}},
   "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"],"2010-2017":["CHYA 1.2L TSI","CJZC 1.4L TSI"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"],"2013-2019":["CZCA 1.4L TSI","CHHB 2.0L GTI"]},"Tiguan":{"2016-2023":["CZPB 1.4L TSI","DFHA 2.0L TSI 4Motion"]},"Passat":{"2015-2023":["CZPA 1.4L TSI","CZRA 2.0L TDI"]},"Amarok":{"2011-2023":["CSHA 2.0L BiTDI","CDCA 3.0L TDI V6"]}},
-  "Ford":{"Ranger":{"2019-2023":["EURO 2.0L EcoBlue","P4AT 2.2L TDCi","P5AT 3.2L TDCi"],"2012-2018":["TBWA 2.2L TDCi","TTVA 3.2L TDCi"]},"Fiesta":{"2017-2023":["B6JE 1.0L EcoBoost","SNJB 1.1L Ti-VCT"]},"Focus":{"2018-2023":["M8MA 1.0L EcoBoost","JTDA 1.5L EcoBoost"]},"Mustang":{"2015-2023":["5.0L V8 Coyote","2.3L EcoBoost"]},"Everest":{"2016-2023":["P4AT 2.2L TDCi","P5AT 3.2L TDCi"]}}
+  "Ford":{"Ranger":{"2019-2023":["EURO 2.0L EcoBlue","P4AT 2.2L TDCi","P5AT 3.2L TDCi"],"2012-2018":["TBWA 2.2L TDCi","TTVA 3.2L TDCi"]},"Fiesta":{"2017-2023":["B6JE 1.0L EcoBoost","SNJB 1.1L Ti-VCT"]},"Focus":{"2018-2023":["M8MA 1.0L EcoBoost","JTDA 1.5L EcoBoost"]},"Mustang":{"2015-2023":["5.0L V8 Coyote","2.3L EcoBoost"]},"Everest":{"2016-2023":["P4AT 2.2L TDCi","P5AT 3.2L TDCi"]}},
+  "BMW":{"3 Series":{"2019-2023":["B48B20 2.0L","B58B30 3.0L"],"2012-2018":["N20B20 2.0L","N55B30 3.0L"]},"5 Series":{"2017-2023":["B48B20 2.0L","B57D30 3.0L Diesel"]},"X3":{"2018-2023":["B48B20 2.0L xDrive20i","B47D20 2.0L xDrive20d"]},"X5":{"2019-2023":["B58B30 3.0L","N63B44T3 4.4L V8"]},"1 Series":{"2020-2023":["B38B15 1.5L","B48B20 2.0L"]}},
+  "Mercedes-Benz":{"C-Class":{"2019-2023":["M264 2.0L","OM654 2.0L Diesel"],"2014-2018":["M274 2.0L","OM651 2.1L Diesel"]},"E-Class":{"2017-2023":["M256 3.0L","OM656 3.0L Diesel"]},"GLC":{"2016-2023":["M274 2.0L","OM651 2.1L Diesel"]},"A-Class":{"2019-2023":["M282 1.3L","M260 2.0L"]},"Sprinter":{"2019-2023":["OM651 2.1L","OM642 3.0L V6"]}},
+  "Nissan":{"Navara":{"2016-2023":["YD25DDTi 2.5L Diesel"],"2005-2015":["YD25DDTi 2.5L","VQ40DE 4.0L"]},"X-Trail":{"2014-2023":["MR20DD 2.0L","R9M 1.6L dCi"]},"Almera":{"2020-2023":["HR15DE 1.5L"]},"NP300":{"2015-2023":["YS23DDT 2.3L Diesel"]},"GTR":{"2009-2023":["VR38DETT 3.8L V6 Twin-Turbo"]}},
+  "Honda":{"Civic":{"2017-2023":["L15B7 1.5L VTEC Turbo","K20C2 2.0L"]},"Jazz":{"2015-2023":["L15Z1 1.5L i-VTEC"]},"CR-V":{"2017-2023":["L15B7 1.5L VTEC Turbo"]},"BR-V":{"2016-2023":["L15Z2 1.5L i-VTEC"]}},
+  "Hyundai":{"i20":{"2021-2023":["G3LE 1.0L T-GDI","G4LD 1.2L"],"2015-2020":["G4LA 1.2L","G4LC 1.4L"]},"Tucson":{"2021-2023":["G4NA 2.0L","D4HB 2.0L CRDi"]},"Santa Fe":{"2019-2023":["G4KH 2.0L T-GDI","D4HB 2.0L CRDi"]},"H1":{"2015-2023":["D4CB 2.5L CRDi"]},"Creta":{"2022-2023":["G4FG 1.5L","G4LC 1.4L T-GDI"]}},
+  "Kia":{"Sportage":{"2022-2023":["G4FP 1.6L T-GDI","D4FE 1.6L CRDi"]},"Seltos":{"2020-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Sonet":{"2021-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Picanto":{"2017-2023":["G3LA 1.0L","G4LA 1.2L"]}},
+  "Isuzu":{"D-Max":{"2020-2023":["4JJ3-TCX 1.9L","4JJ1-TCX 3.0L"],"2013-2019":["4JJ1-TC 2.5L","4JK1-TC 2.5L"]},"mu-X":{"2014-2023":["4JJ1-TCX 3.0L"]}},
+  "Mazda":{"CX-5":{"2017-2023":["SkyActiv-G 2.0L","SkyActiv-G 2.5L","SkyActiv-D 2.2L"]},"Mazda 3":{"2019-2023":["SkyActiv-G 2.0L","SkyActiv-X 2.0L"]},"BT-50":{"2012-2023":["WL-C 2.5L","P5-VPS 3.2L"]}},
+  "Peugeot":{"208":{"2020-2023":["PureTech 100 1.2L","BlueHDi 100 1.5L"]},"2008":{"2020-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]},"308":{"2014-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]}},
+  "Renault":{"Duster":{"2018-2023":["H4B 0.9L TCe","K9K 1.5L dCi"]},"Kwid":{"2018-2023":["D4F 1.0L SCe"]},"Sandero":{"2013-2023":["H4B 0.9L TCe","K4M 1.6L"]}},
+  "Suzuki":{"Swift":{"2018-2023":["K12C 1.2L DualJet","K10C 1.0L BoosterJet"]},"Vitara":{"2015-2023":["K14B 1.4L BoosterJet","K15B 1.5L"]},"Jimny":{"2018-2023":["K15B 1.5L"]}}
 };
 
 /* ─── ICONS ─── */
@@ -325,32 +338,22 @@ function CarDatabaseView(){
 }
 
 /* ─── JOBS VIEW ─── */
-function JobsView({shopInfo}){
-  const [jobs,setJobs]=useState(null);
+function JobsView({ jobs, shopInfo }){
   const [filter,setFilter]=useState('all');
   const [search,setSearch]=useState('');
   const [selected,setSelected]=useState(null);
-  const prevCountRef = useRef(0);
+  
+  const prevCountRef = useRef(jobs ? jobs.length : 0);
   const [newAlert,setNewAlert]=useState(false);
   
   useEffect(()=>{
-    // Increased to 500 to ensure all data is visible
-    const ref=db.ref('workshop_jobs').limitToLast(500);
-    // FIX: Assign callback to variable to properly unmount
-    const cb = ref.on('value',snap=>{
-      if(!snap.exists()){setJobs([]);return;}
-      const arr=[];
-      snap.forEach(c=>arr.push({id:c.key,...c.val()}));
-      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-      if(arr.length > prevCountRef.current && prevCountRef.current > 0) setNewAlert(true);
-      prevCountRef.current = arr.length;
-      setJobs(arr);
-    });
-    // FIX: Explicitly kill only THIS specific listener to prevent silent app breaks
-    return()=>ref.off('value', cb);
-  },[]);
+    if (jobs && jobs.length > prevCountRef.current && prevCountRef.current > 0) {
+      setNewAlert(true);
+      setTimeout(() => setNewAlert(false), 4000);
+    }
+    if (jobs) prevCountRef.current = jobs.length;
+  }, [jobs]);
   
-  useEffect(()=>{if(newAlert){const t=setTimeout(()=>setNewAlert(false),4000);return()=>clearTimeout(t);}},[newAlert]);
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
   const filtered=useMemo(()=>{if(!jobs)return[];let r=jobs;if(filter!=='all')r=r.filter(j=>j.status===filter);if(search.trim()){const q=search.toLowerCase();r=r.filter(j=>`${j.vehicle?.make} ${j.vehicle?.model} ${j.vehicle?.reg} ${j.mechanic?.name}`.toLowerCase().includes(q));}return r;},[jobs,filter,search]);
   const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
@@ -399,31 +402,15 @@ function JobsView({shopInfo}){
 }
 
 /* ─── OVERVIEW ─── */
-function OverviewView({shopInfo}){
-  const [jobs,setJobs]=useState(null);
-  const [recent,setRecent]=useState(null);
+function OverviewView({ jobs, shopInfo }){
   const [selected,setSelected]=useState(null);
-  
-  useEffect(()=>{
-    // Increased to 500 to ensure all data is visible for analytics
-    const ref=db.ref('workshop_jobs').limitToLast(500);
-    // FIX: Assign callback to variable to properly unmount
-    const cb = ref.on('value',snap=>{
-      if(!snap.exists()){setJobs([]);setRecent([]);return;}
-      const arr=[];
-      snap.forEach(c=>arr.push({id:c.key,...c.val()}));
-      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-      setJobs(arr);
-      setRecent(arr.slice(0,5)); // Show only 5 most recent on dashboard cards
-    });
-    // FIX: Explicitly kill only THIS specific listener
-    return()=>ref.off('value', cb);
-  },[]);
   
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
   const pending=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
   const approved=jobs?jobs.filter(j=>j.status==='approved').length:0;
   const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
+  const recent=jobs?jobs.slice(0,5):null; // Only show 5 on dashboard
+  
   const svcCounts=useMemo(()=>{if(!jobs)return[];const c={};jobs.forEach(j=>(j.services||[]).forEach(s=>{c[s.name]=(c[s.name]||0)+1;}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5);},[jobs]);
   
   return(
@@ -516,7 +503,11 @@ function App(){
   const [profile,setProfile]=useState({name:'',shop:''});
   const [view,setView]=useState('overview');
   const [ready,setReady]=useState(false);
-  const [pendingCount,setPendingCount]=useState(0);
+  
+  // SINGLE SOURCE OF TRUTH for data
+  const [jobs, setJobs] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
+
   const [dark,setDark]=useState(()=>{const s=localStorage.getItem('vynix_admin_dark');return s!==null?JSON.parse(s):true;});
 
   useEffect(()=>{
@@ -536,18 +527,33 @@ function App(){
         });
         setReady(true);
       }
-      // if !u, the route guard (vanilla JS above) handles redirect
     });
   },[]);
 
+  // ONE Master Listener for all Jobs
   useEffect(()=>{
-    const ref=db.ref('workshop_jobs');
-    // FIX: Assign callback to variable to properly unmount and prevent silent breaking
-    const cb = ref.on('value',snap=>{let c=0;snap.forEach(j=>{if(j.val().status==='pending_approval')c++;});setPendingCount(c);});
-    return()=>ref.off('value', cb);
+    const ref = db.ref('workshop_jobs').limitToLast(500);
+    const cb = ref.on('value', snap => {
+      if(!snap.exists()) {
+        setJobs([]);
+        setPendingCount(0);
+        return;
+      }
+      const arr = [];
+      let c = 0;
+      snap.forEach(child => {
+        const val = child.val();
+        arr.push({ id: child.key, ...val });
+        if(val.status === 'pending_approval') c++;
+      });
+      arr.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setJobs(arr);
+      setPendingCount(c);
+    });
+    return () => ref.off('value', cb); // Safely kill only this listener
   },[]);
 
-  if(!ready||!user) return null; // Auth gate overlay handles this state
+  if(!ready||!user) return null;
 
   const NAV_ITEMS=[
     {id:'overview',l:'Overview',I:IDash},
@@ -590,8 +596,9 @@ function App(){
       </nav>
       <main style={{flex:1,padding:'28px 32px',overflowY:'auto',minHeight:'100dvh'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
-          {view==='overview'&&<OverviewView shopInfo={profile}/>}
-          {view==='jobs'&&<JobsView shopInfo={profile}/>}
+          {/* Passing the central jobs state down */}
+          {view==='overview'&&<OverviewView jobs={jobs} shopInfo={profile}/>}
+          {view==='jobs'&&<JobsView jobs={jobs} shopInfo={profile}/>}
           {view==='database'&&<CarDatabaseView/>}
           {view==='settings'&&<SettingsView user={user} profile={profile} onSave={setProfile}/>}
         </div>
