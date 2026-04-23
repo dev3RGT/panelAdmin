@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070c1a" id="meta-theme" />
+  <title>VynixPanelB — Admin Login</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #070c1a;
+      --bg2: #0d1530;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #e8eeff;
+      --text2: #8896cc;
+      --text3: #4a5580;
+      --accent: #4d7bff;
+      --accent2: #1a4fff;
+      --accent-glow: rgba(77,123,255,0.28);
+      --cyan: #00f5ff;
+      --green: #00ff88;
+      --amber: #ffb800;
+      --red: #ff5050;
+    }
+    [data-theme="light"] {
+      --bg: #f0f4ff;
+      --bg2: #e6ecfa;
+      --surface: rgba(255,255,255,0.85);
+      --border: rgba(0,0,0,0.07);
+      --text: #0d1426;
+      --text2: #4a5580;
+      --text3: #8896bb;
+      --accent: #1a4fff;
+      --accent2: #0033e6;
+      --accent-glow: rgba(26,79,255,0.2);
+      --cyan: #0090ff;
+      --green: #00b86e;
+      --amber: #e8a000;
+      --red: #e03030;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── ANIMATED BACKGROUND ── */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-canvas::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 900px 700px at 15% 20%, rgba(26,79,255,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 600px 500px at 85% 80%, rgba(0,245,255,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 400px 400px at 70% 10%, rgba(139,92,246,0.08) 0%, transparent 50%);
+    }
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(77,123,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(77,123,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 80%);
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      animation: orbFloat linear infinite;
+      pointer-events: none;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(26,79,255,0.12); top: -100px; left: -80px; animation-duration: 22s; }
+    .orb-2 { width: 350px; height: 350px; background: rgba(0,245,255,0.07); bottom: -50px; right: -50px; animation-duration: 18s; animation-direction: reverse; }
+    .orb-3 { width: 250px; height: 250px; background: rgba(139,92,246,0.09); top: 40%; left: 60%; animation-duration: 26s; }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -20px) scale(1.05); }
+      50% { transform: translate(-20px, 30px) scale(0.97); }
+      75% { transform: translate(15px, 15px) scale(1.03); }
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 20%;
+      bottom: 20%;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      animation: fadeSlideIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .logo-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 40px var(--accent-glow);
+      position: relative;
+    }
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+      pointer-events: none;
+    }
+    .logo-icon svg { width: 26px; height: 26px; color: #fff; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); }
+    .logo-badge {
+      display: inline-flex;
+      padding: 2px 10px;
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      background: rgba(255,184,0,0.12);
+      border: 1px solid rgba(255,184,0,0.25);
+      color: var(--amber);
+      margin-left: 2px;
+    }
+
+    .hero-content {
+      animation: fadeSlideIn 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid rgba(77,123,255,0.25);
+      background: rgba(77,123,255,0.08);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+      margin-bottom: 28px;
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.35} }
+
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(36px, 4.5vw, 58px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .hero-title .accent-word {
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 420px;
+      margin-bottom: 40px;
+    }
+
+    /* Stats strip */
+    .stats-strip {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stat-lbl { font-size: 11px; color: var(--text3); font-weight: 500; }
+    .stat-divider { width: 1px; background: var(--border); align-self: stretch; }
+
+    /* Feature pills */
+    .feature-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 36px;
+    }
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+      backdrop-filter: blur(12px);
+      transition: all 0.2s;
+      animation: fadeSlideIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .feature-pill:nth-child(1){animation-delay:0.3s}
+    .feature-pill:nth-child(2){animation-delay:0.4s}
+    .feature-pill:nth-child(3){animation-delay:0.5s}
+    .feature-pill .dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      animation: fadeSlideIn 0.65s 0.15s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .card-sub { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+    .card-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    }
+
+    /* Security badge */
+    .security-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(0,255,136,0.05);
+      border: 1px solid rgba(0,255,136,0.15);
+      margin-bottom: 24px;
+    }
+    .security-badge svg { width: 15px; height: 15px; color: var(--green); flex-shrink: 0; }
+    .security-badge span { font-size: 12px; font-weight: 600; color: var(--text2); }
+    .security-badge .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; flex-shrink: 0; }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 11px; color: var(--text3); font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; }
+
+    /* Google Button */
+    .google-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      padding: 16px 20px;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.22s;
+      position: relative;
+      overflow: hidden;
+    }
+    .google-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.2s;
+    }
+    .google-btn:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.09); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+    .google-btn:active { transform: scale(0.98); }
+    .google-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .google-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+    /* Loading state */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-msg {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255,80,80,0.08);
+      border: 1px solid rgba(255,80,80,0.2);
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 14px;
+      animation: fadeSlideIn 0.3s ease;
+    }
+
+    /* Info cards */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .info-card {
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .info-card-icon {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+    .info-card-title { font-size: 12px; font-weight: 700; color: var(--text); }
+    .info-card-sub { font-size: 11px; color: var(--text3); line-height: 1.4; }
+
+    /* Dark mode toggle */
+    .dm-toggle {
+      position: absolute;
+      top: 28px;
+      right: 28px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .dm-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.22s;
+      color: var(--text3);
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+    .dm-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    .dm-btn svg { width: 14px; height: 14px; }
+
+    /* Footer */
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text3);
+    }
+    .login-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .login-footer a:hover { text-decoration: underline; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      .page { grid-template-columns: 1fr; overflow: auto; height: auto; min-height: 100vh; }
+      .left-panel { display: none; }
+      .right-panel { padding: 32px 24px; min-height: 100vh; }
+      .dm-toggle { top: 20px; right: 20px; }
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      animation: fadeSlideIn 0.4s ease;
+    }
+    .loading-logo svg { width: 32px; height: 32px; color: #fff; }
+    .loading-icon {
+      width: 64px; height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 16px 50px var(--accent-glow);
+    }
+    .loading-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .loading-bar {
+      width: 120px; height: 3px;
+      background: var(--border);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .loading-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      border-radius: 100px;
+      animation: loadBar 1.5s ease-in-out infinite;
+    }
+    @keyframes loadBar {
+      0% { width: 0%; transform: translateX(0); }
+      50% { width: 80%; }
+      100% { width: 100%; transform: translateX(100%); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">
+    <div class="loading-icon">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    </div>
+    <span class="loading-text">VynixPanelB</span>
+    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  </div>
+</div>
+
+<div class="bg-canvas">
+  <div class="grid-lines"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="page">
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+    <!-- Logo -->
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">VynixPanelB</div>
+        <span class="logo-badge">★ ADMIN PORTAL</span>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="live-dot"></span>
+        System Online · Real-time Dashboard
+      </div>
+      <h1 class="hero-title">
+        Workshop<br>
+        <span class="accent-word">Intelligence</span><br>
+        Platform
+      </h1>
+      <p class="hero-sub">
+        Manage all incoming workshop job cards, approve or reject service quotations, and track revenue — all from one powerful admin interface.
+      </p>
+
+      <!-- Stats -->
+      <div class="stats-strip">
+        <div class="stat-item">
+          <span class="stat-val">Live</span>
+          <span class="stat-lbl">Real-time Sync</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-val">PDF</span>
+          <span class="stat-lbl">Export Ready</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-val">15%</span>
+          <span class="stat-lbl">VAT Auto-calc</span>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="feature-pills">
+        <div class="feature-pill"><span class="dot" style="background:var(--green)"></span> Live Job Approvals</div>
+        <div class="feature-pill"><span class="dot" style="background:var(--accent)"></span> Revenue Analytics</div>
+        <div class="feature-pill"><span class="dot" style="background:var(--amber)"></span> PDF Quotations</div>
+      </div>
+    </div>
+
+    <!-- Bottom version -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);">
+      v2.4.1 · Firebase v10.8 · Secured
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right-panel">
+
+    <!-- Dark mode toggle -->
+    <div class="dm-toggle" id="dmToggle" title="Toggle theme">
+      <button class="dm-btn" id="btnLight" onclick="setTheme('light')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+      </button>
+      <button class="dm-btn" id="btnDark" onclick="setTheme('dark')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="login-card">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+          <div style="width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px var(--accent-glow);">
+            <svg style="width:28px;height:28px;color:#fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+        </div>
+        <h2 class="card-title">Admin Access</h2>
+        <p class="card-sub">Sign in with your authorised Google account to access the VynixPanelB admin dashboard.</p>
+      </div>
+
+      <div class="card-body">
+        <!-- Security indicator -->
+        <div class="security-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span class="badge-dot"></span>
+          <span>Secured with OAuth 2.0 · Encrypted Session</span>
+        </div>
+
+        <!-- Google Sign In -->
+        <button class="google-btn" id="googleBtn" onclick="signInWithGoogle()">
+          <svg viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span id="googleBtnText">Continue with Google</span>
+        </button>
+
+        <!-- Error message -->
+        <div class="error-msg" id="errorMsg" style="display:none;">
+          <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
+          <span id="errorText">Authentication failed. Please try again.</span>
+        </div>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">ADMIN ONLY ACCESS</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- Info grid -->
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-card-icon" style="background:rgba(77,123,255,0.1);">📋</div>
+            <div class="info-card-title">Job Management</div>
+            <div class="info-card-sub">Approve, reject & export job cards</div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-icon" style="background:rgba(0,255,136,0.08);">📊</div>
+            <div class="info-card-title">Live Analytics</div>
+            <div class="info-card-sub">Real-time revenue & service stats</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-footer">
+        Looking for the mechanic app?
+        <a href="https://vynixpanelb-mech.web.app" target="_blank">Open Mechanic Portal →</a>
+        <br><br>
+        <span>© 2025 VynixPanelB · All rights reserved</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ─── FIREBASE CONFIG ─── */
+  const FC = {
+    apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
+    authDomain: "test-17881.firebaseapp.com",
+    projectId: "test-17881",
+    storageBucket: "test-17881.firebasestorage.app",
+    messagingSenderId: "1057428047643",
+    appId: "1:1057428047643:web:f3801c0d933225a5cd35be",
+    databaseURL: "https://test-17881-default-rtdb.firebaseio.com"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(FC);
+  const auth = firebase.auth();
+  const db = firebase.database();
+  const gp = new firebase.auth.GoogleAuthProvider();
+
+  /* ─── THEME ─── */
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('meta-theme').content = t === 'dark' ? '#070c1a' : '#f0f4ff';
+    localStorage.setItem('vynix_admin_dark', t === 'dark' ? 'true' : 'false');
+    document.getElementById('btnLight').classList.toggle('active', t === 'light');
+    document.getElementById('btnDark').classList.toggle('active', t === 'dark');
+  }
+
+  // Init theme
+  const savedDark = localStorage.getItem('vynix_admin_dark');
+  const isDark = savedDark !== null ? JSON.parse(savedDark) : true;
+  setTheme(isDark ? 'dark' : 'light');
+
+  /* ─── AUTH STATE ─── */
+  auth.onAuthStateChanged(user => {
+    const overlay = document.getElementById('loadingOverlay');
+    if (user) {
+      // Already logged in — redirect to dashboard
+      overlay.querySelector('.loading-text').textContent = 'Redirecting…';
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 600);
+    } else {
+      // Show the page
+      overlay.classList.add('hidden');
+      setTimeout(() => overlay.remove(), 500);
+    }
+  });
+
+  /* ─── SIGN IN ─── */
+  async function signInWithGoogle() {
+    const btn = document.getElementById('googleBtn');
+    const btnText = document.getElementById('googleBtnText');
+    const errorMsg = document.getElementById('errorMsg');
+
+    btn.disabled = true;
+    btnText.textContent = 'Authenticating…';
+    btn.querySelector('svg').style.display = 'none';
+    // Add spinner
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner';
+    btn.insertBefore(spinner, btn.firstChild);
+    errorMsg.style.display = 'none';
+
+    try {
+      await auth.signInWithPopup(gp);
+      btnText.textContent = 'Redirecting to dashboard…';
+      // auth state change will handle redirect
+    } catch (err) {
+      btn.disabled = false;
+      btnText.textContent = 'Continue with Google';
+      spinner.remove();
+      btn.querySelector('svg').style.display = '';
+      document.getElementById('errorText').textContent = err.message || 'Authentication failed. Please try again.';
+      errorMsg.style.display = 'flex';
+    }
+  }
+</script>
+</body>
+</html>
