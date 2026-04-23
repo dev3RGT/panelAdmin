@@ -1,1 +1,934 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070c1a" id="meta-theme" />
+  <title>VynixPanelB — Admin Dashboard</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg:#f0f4ff; --bg2:#e6ecfa; --surface:rgba(255,255,255,0.85); --surface2:rgba(255,255,255,0.5);
+      --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.04); --text:#0d1426; --text2:#4a5580; --text3:#8896bb;
+      --accent:#1a4fff; --accent2:#0033e6; --accent-glow:rgba(26,79,255,0.2);
+      --cyan:#0090ff; --green:#00b86e; --amber:#e8a000; --red:#e03030; --purple:#8b5cf6;
+      --shadow:0 4px 24px rgba(0,0,0,0.08); --shadow-lg:0 8px 40px rgba(0,0,0,0.14);
+      --input-bg:rgba(0,0,0,0.04); --input-border:rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg:#070c1a; --bg2:#0d1530; --surface:rgba(255,255,255,0.04); --surface2:rgba(255,255,255,0.02);
+      --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.04); --text:#e8eeff; --text2:#8896cc; --text3:#4a5580;
+      --accent:#4d7bff; --accent2:#1a4fff; --accent-glow:rgba(77,123,255,0.22);
+      --cyan:#00f5ff; --green:#00ff88; --amber:#ffb800; --red:#ff5050; --purple:#a78bfa;
+      --shadow:0 4px 24px rgba(0,0,0,0.4); --shadow-lg:0 8px 40px rgba(0,0,0,0.6);
+      --input-bg:rgba(255,255,255,0.05); --input-border:rgba(255,255,255,0.1);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;margin:0;transition:background .3s,color .3s}
+    ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    .surface{background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:11px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;transition:all .2s}
+    .field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .field::placeholder{color:var(--text3)}
+    .btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:100px;padding:11px 22px;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
+    .btn-p:active{transform:scale(0.97)}
+    .btn-p:disabled{background:var(--input-bg);color:var(--text3);cursor:not-allowed;box-shadow:none;transform:none}
+    .btn-g{background:var(--input-bg);color:var(--text2);border:1px solid var(--border);border-radius:100px;padding:10px 18px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+    .btn-g:hover{background:var(--border);color:var(--text)}
+    .mono{font-family:'JetBrains Mono',monospace}
+    @keyframes slideUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-500px 0}100%{background-position:500px 0}}
+    @keyframes overlayIn{0%{opacity:0}100%{opacity:1}}
+    @keyframes modalIn{0%{opacity:0;transform:translate(-50%,-46%) scale(0.95)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    @keyframes badgePop{0%{transform:scale(0.7);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+    @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(77,123,255,0.4)}70%{box-shadow:0 0 0 10px rgba(77,123,255,0)}100%{box-shadow:0 0 0 0 rgba(77,123,255,0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .anim-up{animation:slideUp .32s cubic-bezier(.16,1,.3,1) forwards}
+    .skel{background:linear-gradient(90deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.03) 100%);background-size:500px 100%;animation:shimmer 1.6s infinite;border-radius:12px}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s ease-in-out infinite;margin-right:5px}
+    .sidebar-admin{width:240px;min-width:240px;height:100vh;position:sticky;top:0;background:var(--bg2);border-right:1px solid var(--border);padding:20px 14px;display:flex;flex-direction:column;overflow-y:auto}
+    .snav{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2);border:1px solid transparent;transition:all .18s;width:100%;text-align:left}
+    .snav.active{background:rgba(77,123,255,0.1);color:var(--accent);border-color:rgba(77,123,255,0.2)}
+    .snav:hover:not(.active){background:var(--surface);color:var(--text)}
+    .stat-card{padding:18px 20px;border-radius:18px;background:var(--surface);border:1px solid var(--border);transition:all .2s}
+    .job-row{border-bottom:1px solid var(--border2);transition:background .15s;cursor:pointer}
+    .job-row:hover{background:rgba(77,123,255,0.03)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.4px;font-family:'JetBrains Mono',monospace}
+    .tab-btn{padding:8px 18px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .dm-pill{display:flex;align-items:center;background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:3px;gap:2px;cursor:pointer}
+    .dm-btn{width:30px;height:30px;border-radius:100px;display:flex;align-items:center;justify-content:center;transition:all .25s;color:var(--text3)}
+    .dm-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px var(--accent-glow)}
+    .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);animation:overlayIn .2s ease}
+    .modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:201;background:var(--bg2);border:1px solid var(--border);border-radius:24px;width:min(92vw,680px);max-height:88vh;overflow-y:auto;padding:32px;box-shadow:var(--shadow-lg);animation:modalIn .3s cubic-bezier(.16,1,.3,1)}
+    .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:100px;font-size:10px;font-weight:800;padding:1px 5px;font-family:'JetBrains Mono',monospace;animation:badgePop .3s ease;border:2px solid var(--bg2)}
+    .car-db-row{padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);margin-bottom:8px;transition:all .15s}
+    .car-db-row:hover{border-color:var(--accent);background:rgba(77,123,255,0.04)}
+    .tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(77,123,255,0.08);color:var(--accent);border:1px solid rgba(77,123,255,0.18);margin:2px;font-family:'JetBrains Mono'}
+    .print-btn{background:linear-gradient(135deg,#00b86e,#007a4a);color:#fff;border:none;border-radius:100px;padding:10px 20px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+    .print-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,184,110,0.35)}
+    .search-input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:9px 16px 9px 40px;outline:none;font-family:'Inter',sans-serif;font-size:13px;width:100%;transition:all .2s}
+    .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    @media print{body *{visibility:hidden}.print-area,.print-area *{visibility:visible}.print-area{position:fixed;top:0;left:0;width:100%;padding:20px}button{display:none!important}}
+    input[type=number]::-webkit-inner-spin-button{opacity:1}
+    .new-job-ring{animation:ringPulse 1.5s infinite}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+/* ─── FIREBASE ─── */
+const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
+if(!firebase.apps.length) firebase.initializeApp(FC);
+const auth=firebase.auth(), db=firebase.database(), gp=new firebase.auth.GoogleAuthProvider();
+
+const LABOR=750;
+
+/* ─── CAR DATABASE (same as mechanic) ─── */
+const CAR_DB={
+  "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"],"2012-2015":["1KD-FTV 3.0L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]},"Yaris":{"2020-2023":["1KR-FE 1.0L","1NR-FE 1.3L"]},"Land Cruiser":{"2008-2023":["1VD-FTV 4.5L V8 Diesel","1GR-FE 4.0L V6"]}},
+  "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"],"2010-2017":["CHYA 1.2L TSI","CJZC 1.4L TSI"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"],"2013-2019":["CZCA 1.4L TSI","CHHB 2.0L GTI"]},"Tiguan":{"2016-2023":["CZPB 1.4L TSI","DFHA 2.0L TSI 4Motion"]},"Passat":{"2015-2023":["CZPA 1.4L TSI","CZRA 2.0L TDI"]},"Amarok":{"2011-2023":["CSHA 2.0L BiTDI","CDCA 3.0L TDI V6"]}},
+  "Ford":{"Ranger":{"2019-2023":["EURO 2.0L EcoBlue","P4AT 2.2L TDCi","P5AT 3.2L TDCi"],"2012-2018":["TBWA 2.2L TDCi","TTVA 3.2L TDCi"]},"Fiesta":{"2017-2023":["B6JE 1.0L EcoBoost","SNJB 1.1L Ti-VCT"]},"Focus":{"2018-2023":["M8MA 1.0L EcoBoost","JTDA 1.5L EcoBoost"]},"Mustang":{"2015-2023":["5.0L V8 Coyote","2.3L EcoBoost"]},"Everest":{"2016-2023":["P4AT 2.2L TDCi","P5AT 3.2L TDCi"]}},
+  "BMW":{"3 Series":{"2019-2023":["B48B20 2.0L","B58B30 3.0L"],"2012-2018":["N20B20 2.0L","N55B30 3.0L"]},"5 Series":{"2017-2023":["B48B20 2.0L","B57D30 3.0L Diesel"]},"X3":{"2018-2023":["B48B20 2.0L xDrive20i","B47D20 2.0L xDrive20d"]},"X5":{"2019-2023":["B58B30 3.0L","N63B44T3 4.4L V8"]},"1 Series":{"2020-2023":["B38B15 1.5L","B48B20 2.0L"]}},
+  "Mercedes-Benz":{"C-Class":{"2019-2023":["M264 2.0L","OM654 2.0L Diesel"],"2014-2018":["M274 2.0L","OM651 2.1L Diesel"]},"E-Class":{"2017-2023":["M256 3.0L","OM656 3.0L Diesel"]},"GLC":{"2016-2023":["M274 2.0L","OM651 2.1L Diesel"]},"A-Class":{"2019-2023":["M282 1.3L","M260 2.0L"]},"Sprinter":{"2019-2023":["OM651 2.1L","OM642 3.0L V6"]}},
+  "Nissan":{"Navara":{"2016-2023":["YD25DDTi 2.5L Diesel"],"2005-2015":["YD25DDTi 2.5L","VQ40DE 4.0L"]},"X-Trail":{"2014-2023":["MR20DD 2.0L","R9M 1.6L dCi"]},"Almera":{"2020-2023":["HR15DE 1.5L"]},"NP300":{"2015-2023":["YS23DDT 2.3L Diesel"]},"GTR":{"2009-2023":["VR38DETT 3.8L V6 Twin-Turbo"]}},
+  "Honda":{"Civic":{"2017-2023":["L15B7 1.5L VTEC Turbo","K20C2 2.0L"]},"Jazz":{"2015-2023":["L15Z1 1.5L i-VTEC"]},"CR-V":{"2017-2023":["L15B7 1.5L VTEC Turbo"]},"BR-V":{"2016-2023":["L15Z2 1.5L i-VTEC"]}},
+  "Hyundai":{"i20":{"2021-2023":["G3LE 1.0L T-GDI","G4LD 1.2L"],"2015-2020":["G4LA 1.2L","G4LC 1.4L"]},"Tucson":{"2021-2023":["G4NA 2.0L","D4HB 2.0L CRDi"]},"Santa Fe":{"2019-2023":["G4KH 2.0L T-GDI","D4HB 2.0L CRDi"]},"H1":{"2015-2023":["D4CB 2.5L CRDi"]},"Creta":{"2022-2023":["G4FG 1.5L","G4LC 1.4L T-GDI"]}},
+  "Kia":{"Sportage":{"2022-2023":["G4FP 1.6L T-GDI","D4FE 1.6L CRDi"]},"Seltos":{"2020-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Sonet":{"2021-2023":["G3LC 1.0L T-GDI","G4FG 1.5L"]},"Picanto":{"2017-2023":["G3LA 1.0L","G4LA 1.2L"]}},
+  "Isuzu":{"D-Max":{"2020-2023":["4JJ3-TCX 1.9L","4JJ1-TCX 3.0L"],"2013-2019":["4JJ1-TC 2.5L","4JK1-TC 2.5L"]},"mu-X":{"2014-2023":["4JJ1-TCX 3.0L"]}},
+  "Mazda":{"CX-5":{"2017-2023":["SkyActiv-G 2.0L","SkyActiv-G 2.5L","SkyActiv-D 2.2L"]},"Mazda 3":{"2019-2023":["SkyActiv-G 2.0L","SkyActiv-X 2.0L"]},"BT-50":{"2012-2023":["WL-C 2.5L","P5-VPS 3.2L"]}},
+  "Peugeot":{"208":{"2020-2023":["PureTech 100 1.2L","BlueHDi 100 1.5L"]},"2008":{"2020-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]},"308":{"2014-2023":["PureTech 130 1.2L","BlueHDi 130 1.5L"]}},
+  "Renault":{"Duster":{"2018-2023":["H4B 0.9L TCe","K9K 1.5L dCi"]},"Kwid":{"2018-2023":["D4F 1.0L SCe"]},"Sandero":{"2013-2023":["H4B 0.9L TCe","K4M 1.6L"]}},
+  "Suzuki":{"Swift":{"2018-2023":["K12C 1.2L DualJet","K10C 1.0L BoosterJet"]},"Vitara":{"2015-2023":["K14B 1.4L BoosterJet","K15B 1.5L"]},"Jimny":{"2018-2023":["K15B 1.5L"]}}
+};
+
+const SERVICE_CATALOG_FLAT = {
+  "oil-change":{name:"Engine Oil & Filter Change",parts:["Engine Oil (5L)","Oil Filter"]},
+  "air-filter":{name:"Air Filter Replacement",parts:["Air Filter"]},
+  "cabin-filter":{name:"Cabin Air Filter",parts:["Cabin Filter"]},
+  "spark-plugs":{name:"Spark Plug Replacement",parts:["Spark Plugs (x4)"]},
+  "fuel-filter":{name:"Fuel Filter Replacement",parts:["Fuel Filter"]},
+  "brake-pads-front":{name:"Front Brake Pad Replacement",parts:["Front Brake Pads (Set)"]},
+  "brake-pads-rear":{name:"Rear Brake Pad Replacement",parts:["Rear Brake Pads (Set)"]},
+  "brake-discs-front":{name:"Front Brake Disc Replacement",parts:["Front Brake Discs (Pair)"]},
+  "brake-fluid":{name:"Brake Fluid Flush",parts:["DOT4 Brake Fluid 1L"]},
+  "coolant-flush":{name:"Coolant Flush & Refill",parts:["Coolant 5L"]},
+  "thermostat":{name:"Thermostat Replacement",parts:["Thermostat","Gasket"]},
+  "water-pump":{name:"Water Pump Replacement",parts:["Water Pump","Gasket","Coolant"]},
+  "shock-front":{name:"Front Shock Absorber (Pair)",parts:["Front Shock Absorbers x2"]},
+  "shock-rear":{name:"Rear Shock Absorber (Pair)",parts:["Rear Shock Absorbers x2"]},
+  "wheel-bearing":{name:"Wheel Bearing Replacement",parts:["Wheel Bearing"]},
+  "ball-joint":{name:"Ball Joint Replacement",parts:["Ball Joint","Lock Nut"]},
+  "battery":{name:"Battery Replacement",parts:["Battery 60Ah"]},
+  "alternator":{name:"Alternator Replacement",parts:["Alternator","Drive Belt"]},
+  "timing-belt":{name:"Timing Belt / Chain Kit",parts:["Timing Belt Kit","Tensioner","Idler"]},
+  "clutch-kit":{name:"Clutch Kit Replacement",parts:["Clutch Kit"]},
+  "wheel-alignment":{name:"Four-Wheel Alignment",parts:[]},
+  "tyre-fit":{name:"Tyre Fitting",parts:[]},
+};
+
+/* ─── ICONS ─── */
+const IWrench=()=><svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
+const IDash=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
+const ICar=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
+const ILogout=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5-5-5m5 5H9"/></svg>;
+const IBell=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>;
+const IPrint=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
+const ICheck=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
+const IClose=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>;
+const ISearch=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="M21 21l-4.35-4.35"/></svg>;
+const ISpin=({cls='w-6 h-6'})=><svg className={`${cls} animate-spin`} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.15"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg>;
+const IGoog=()=><svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
+const IDB=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>;
+const IScreenLight=()=><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>;
+const ICircuitDark=()=><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>;
+const IChev=({dir='right'})=><svg className="w-4 h-4" style={{transform:dir==='down'?'rotate(90deg)':dir==='left'?'rotate(180deg)':'none',transition:'transform .2s'}} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
+const ISparkle=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 3l1.5 4L10 9 6.5 10.5 5 15l-1.5-4.5L0 9l3.5-1.5L5 3zM19 3l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/></svg>;
+
+function DarkModePill({dark,onToggle}){
+  return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
+}
+
+/* ─── PDF EXPORT (admin-only) ─── */
+function exportJobPDF(job, shopInfo){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=doc.internal.pageSize.getWidth();
+  const shopName=shopInfo?.shop||'VynixPanelB Auto';
+  const adminName=shopInfo?.name||'Admin';
+
+  // Header
+  doc.setFillColor(7,12,26); doc.rect(0,0,pw,42,'F');
+  doc.setFillColor(26,79,255); doc.rect(0,0,4,42,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(232,238,255);
+  doc.text(shopName,14,16);
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(150,170,220);
+  doc.text('Vehicle Service Quotation',14,24);
+  doc.text(`Issued: ${new Date().toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'})}`,14,31);
+  doc.text(`Ref: JOB-${job.id.slice(-8).toUpperCase()}`,pw-14,24,{align:'right'});
+  doc.text(`Authorised by: ${adminName}`,pw-14,31,{align:'right'});
+
+  // APPROVED watermark
+  if(job.status==='approved'){
+    doc.setTextColor(0,255,136); doc.setFontSize(48); doc.setFont('helvetica','bold');
+    doc.setGState(new doc.GState({opacity:0.06}));
+    doc.text('APPROVED',pw/2,150,{align:'center',angle:45});
+    doc.setGState(new doc.GState({opacity:1}));
+  }
+
+  // Vehicle
+  doc.setFillColor(15,22,55); doc.roundedRect(10,48,pw-20,24,3,3,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,245,255);
+  doc.text('VEHICLE INFORMATION',16,57);
+  doc.setFont('helvetica','normal'); doc.setTextColor(200,210,240); doc.setFontSize(9);
+  const v=job.vehicle||{};
+  doc.text(`${v.make||'—'} ${v.model||'—'} ${v.year||''}`,16,64);
+  doc.text(`Reg: ${v.reg||'—'}   Engine: ${v.engine||'—'}   Odometer: ${v.km||'—'} km`,16,70);
+  if(v.vin) doc.text(`VIN: ${v.vin}`,16,76);
+
+  // Mechanic
+  doc.setFillColor(20,30,65); doc.roundedRect(pw-100,48,90,24,3,3,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,245,255);
+  doc.text('MECHANIC',pw-96,57);
+  doc.setFont('helvetica','normal'); doc.setTextColor(200,210,240); doc.setFontSize(9);
+  doc.text(job.mechanic?.name||'—',pw-96,64);
+  doc.text(job.mechanic?.shop||'—',pw-96,70);
+
+  let y=(v.vin?78:72)+8;
+
+  // Services table
+  doc.autoTable({
+    startY:y,
+    head:[['Service','Parts','Qty','Labour (h)','Unit Price','Total (R)']],
+    body:(job.services||[]).map(s=>[
+      s.name||s.serviceId,
+      (s.parts||[]).join(', ')||'—',
+      s.qty||1,
+      ((s.laborHours)||'—'),
+      `R ${(s.unitPrice||s.total||0).toFixed(2)}`,
+      `R ${(s.total||0).toFixed(2)}`
+    ]),
+    headStyles:{fillColor:[26,79,255],textColor:[255,255,255],fontStyle:'bold',fontSize:7.5},
+    bodyStyles:{textColor:[30,40,80],fontSize:7.5,fillColor:[240,244,255]},
+    alternateRowStyles:{fillColor:[228,234,255]},
+    columnStyles:{0:{cellWidth:48},1:{cellWidth:42},2:{halign:'center',cellWidth:10},3:{halign:'center',cellWidth:18},4:{halign:'right',cellWidth:22},5:{halign:'right',fontStyle:'bold',cellWidth:22}},
+    margin:{left:10,right:10},theme:'grid',
+  });
+
+  let fy=doc.lastAutoTable.finalY+8;
+  const fin=job.financials||{};
+
+  // Totals box
+  doc.setFillColor(240,244,255); doc.roundedRect(pw-90,fy,80,52,3,3,'F');
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(80,100,150);
+  const rc=pw-14;
+  doc.text(`Labour (${(fin.laborTotal/LABOR||0).toFixed(1)}h × R${LABOR})`,pw-92,fy+10,{align:'right'});
+  doc.text(`R ${(fin.laborTotal||0).toFixed(2)}`,rc,fy+10,{align:'right'});
+  doc.text('Parts & Materials',pw-92,fy+19,{align:'right'});
+  doc.text(`R ${(fin.partsTotal||0).toFixed(2)}`,rc,fy+19,{align:'right'});
+  doc.text('Subtotal',pw-92,fy+28,{align:'right'});
+  doc.text(`R ${(fin.subtotal||0).toFixed(2)}`,rc,fy+28,{align:'right'});
+  doc.text('VAT 15%',pw-92,fy+37,{align:'right'});
+  doc.text(`R ${(fin.vat||0).toFixed(2)}`,rc,fy+37,{align:'right'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(26,79,255);
+  doc.text('GRAND TOTAL',pw-92,fy+49,{align:'right'});
+  doc.text(`R ${(fin.grandTotal||0).toFixed(2)}`,rc,fy+49,{align:'right'});
+
+  // Notes
+  if(job.notes){
+    doc.setFillColor(255,240,200); doc.roundedRect(10,fy,pw-104,30,3,3,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(150,100,0);
+    doc.text('MECHANIC NOTES',16,fy+9);
+    doc.setFont('helvetica','normal'); doc.setTextColor(80,60,0); doc.setFontSize(8);
+    const ns=doc.splitTextToSize(job.notes,pw-120);
+    doc.text(ns,16,fy+17);
+  }
+
+  // Status stamp
+  if(job.status==='approved'||job.status==='rejected'){
+    const sc=job.status==='approved'?[0,180,110]:[224,48,48];
+    doc.setDrawColor(...sc); doc.setLineWidth(1.5);
+    doc.roundedRect(10,fy+56,50,14,3,3,'S');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...sc);
+    doc.text(job.status.toUpperCase(),35,fy+65,{align:'center'});
+  }
+
+  // Footer
+  const ph=doc.internal.pageSize.getHeight();
+  doc.setFillColor(7,12,26); doc.rect(0,ph-14,pw,14,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,120,160);
+  doc.text(`VynixPanelB Admin Dashboard | This is an official quotation | Job ID: ${job.id}`,pw/2,ph-7,{align:'center'});
+  doc.save(`Quote_${v.make||'Vehicle'}_${v.reg||'REG'}_${Date.now()}.pdf`);
+}
+
+/* ─── JOB DETAIL MODAL ─── */
+function JobModal({job,onClose,onStatusChange,shopInfo}){
+  const v=job.vehicle||{};
+  const fin=job.financials||{};
+
+  return(
+    <>
+      <div className="modal-overlay" onClick={onClose}/>
+      <div className="modal-box">
+        {/* Header */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+              <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>{v.make} {v.model}</h2>
+              <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:100,fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',
+                background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='rejected'?'rgba(255,80,80,0.1)':'rgba(255,184,0,0.1)',
+                color:job.status==='approved'?'var(--green)':job.status==='rejected'?'var(--red)':'var(--amber)',
+                border:`1px solid ${job.status==='approved'?'rgba(0,255,136,0.2)':job.status==='rejected'?'rgba(255,80,80,0.2)':'rgba(255,184,0,0.2)'}`}}>
+                {job.status==='pending_approval'?'⬤ PENDING':job.status==='approved'?'⬤ APPROVED':'⬤ REJECTED'}
+              </span>
+            </div>
+            <p style={{fontSize:12,color:'var(--text3)',margin:0}}>Job ID: {job.id.slice(-12).toUpperCase()} · {job.createdAt?new Date(job.createdAt).toLocaleString('en-ZA',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–'}</p>
+          </div>
+          <button onClick={onClose} style={{background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:10,padding:8,cursor:'pointer',color:'var(--text2)',display:'flex',alignItems:'center',justifyContent:'center'}}><IClose/></button>
+        </div>
+
+        {/* Vehicle Info */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
+          {[['Make & Model',`${v.make||'—'} ${v.model||'—'}`],['Engine',v.engine||'—'],['Reg. Plate',v.reg||'—'],['Odometer',v.km?`${v.km} km`:'—'],['Year Range',v.year||'—'],['VIN',v.vin||'—']].map(([l,val])=>(
+            <div key={l} style={{padding:'10px 12px',borderRadius:10,background:'var(--input-bg)',border:'1px solid var(--border)'}}>
+              <p style={{fontSize:9,fontWeight:700,color:'var(--text3)',margin:'0 0 3px',letterSpacing:'0.5px'}}>{l}</p>
+              <p style={{fontSize:13,fontWeight:600,color:'var(--text)',margin:0,fontFamily:l==='VIN'?'JetBrains Mono':'Inter'}}>{val}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Mechanic */}
+        <div style={{padding:'10px 14px',borderRadius:12,background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',marginBottom:16,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div>
+            <p style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:'0 0 2px',letterSpacing:'0.5px'}}>MECHANIC</p>
+            <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{job.mechanic?.name||'—'}</p>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <p style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:'0 0 2px',letterSpacing:'0.5px'}}>WORKSHOP</p>
+            <p style={{fontSize:13,color:'var(--text2)',margin:0}}>{job.mechanic?.shop||'—'}</p>
+          </div>
+        </div>
+
+        {/* Services */}
+        <div style={{marginBottom:16}}>
+          <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>SERVICES REQUESTED ({(job.services||[]).length})</p>
+          <div style={{border:'1px solid var(--border)',borderRadius:14,overflow:'hidden'}}>
+            {(job.services||[]).map((s,i)=>(
+              <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 16px',borderBottom:i<job.services.length-1?'1px solid var(--border2)':'none'}}>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600,color:'var(--text)',margin:0}}>{s.icon||'🔧'} {s.name}</p>
+                  <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{(s.parts||[]).join(', ')||'Labour only'} · {s.laborHours||0}h{s.qty>1?` × ${s.qty}`:''}</p>
+                </div>
+                <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--text)',flexShrink:0,marginLeft:12}}>R {(s.total||0).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Totals */}
+        <div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:14,padding:'14px 16px',marginBottom:16}}>
+          {[[`Labour (${((fin.laborTotal||0)/LABOR).toFixed(1)}h × R${LABOR})`,`R ${(fin.laborTotal||0).toFixed(2)}`],['Parts & Materials',`R ${(fin.partsTotal||0).toFixed(2)}`],['Subtotal',`R ${(fin.subtotal||0).toFixed(2)}`],['VAT 15%',`R ${(fin.vat||0).toFixed(2)}`]].map(([l,v])=>(
+            <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',fontSize:13,color:'var(--text2)'}}>
+              <span>{l}</span><span className="mono" style={{color:'var(--text)',fontWeight:600}}>{v}</span>
+            </div>
+          ))}
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(77,123,255,0.2)',paddingTop:12,marginTop:6}}>
+            <span style={{fontSize:16,fontWeight:900,color:'var(--accent)'}}>GRAND TOTAL</span>
+            <span className="mono" style={{fontSize:24,fontWeight:900,color:'var(--accent)'}}>R {(fin.grandTotal||0).toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Notes */}
+        {job.notes&&<div style={{padding:'10px 14px',borderRadius:12,background:'rgba(255,184,0,0.07)',border:'1px solid rgba(255,184,0,0.2)',marginBottom:16}}>
+          <p style={{fontSize:9,fontWeight:700,color:'var(--amber)',margin:'0 0 4px',letterSpacing:'0.5px'}}>MECHANIC NOTES</p>
+          <p style={{fontSize:13,color:'var(--text2)',margin:0}}>{job.notes}</p>
+        </div>}
+
+        {/* Actions */}
+        <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+          <button className="print-btn" onClick={()=>exportJobPDF(job,shopInfo)}><IPrint/> Print / Download PDF</button>
+          {job.status!=='approved'&&<button onClick={()=>{onStatusChange(job.id,'approved');onClose();}} style={{padding:'10px 20px',borderRadius:100,fontSize:13,fontWeight:700,background:'rgba(0,255,136,0.1)',color:'var(--green)',border:'1px solid rgba(0,255,136,0.2)',cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',gap:6}}><ICheck/> Approve</button>}
+          {job.status!=='rejected'&&<button onClick={()=>{onStatusChange(job.id,'rejected');onClose();}} style={{padding:'10px 20px',borderRadius:100,fontSize:13,fontWeight:700,background:'rgba(255,80,80,0.08)',color:'var(--red)',border:'1px solid rgba(255,80,80,0.18)',cursor:'pointer',fontFamily:'Inter'}}>✕ Reject</button>}
+          {job.status!=='pending_approval'&&<button onClick={()=>{onStatusChange(job.id,'pending_approval');}} className="btn-g" style={{fontSize:13}}>↩ Reset to Pending</button>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─── CAR DATABASE VIEW ─── */
+function CarDatabaseView(){
+  const [selectedMake,setSelectedMake]=useState(Object.keys(CAR_DB)[0]);
+  const [selectedModel,setSelectedModel]=useState('');
+  const [searchQ,setSearchQ]=useState('');
+
+  const makes=Object.keys(CAR_DB).sort();
+  const models=selectedMake?Object.keys(CAR_DB[selectedMake]||{}).sort():[];
+
+  useEffect(()=>{setSelectedModel(models[0]||'');},[selectedMake]);
+
+  const yearRanges=selectedMake&&selectedModel?Object.entries(CAR_DB[selectedMake]?.[selectedModel]||{}):[];
+
+  const SERVICE_PARTS = {
+    "Engine Oil & Filter": ["Engine Oil (5L)","Oil Filter","Drain Plug Washer"],
+    "Air Filter": ["Air Filter Element"],
+    "Cabin Filter": ["Cabin Air Filter / Pollen Filter"],
+    "Spark Plugs": ["Iridium Spark Plugs x4","Copper Spark Plugs x4"],
+    "Fuel Filter": ["Inline Fuel Filter","In-tank Fuel Filter"],
+    "Brake Pads": ["Front Brake Pad Set","Rear Brake Pad Set","Brake Pad Shim Kit"],
+    "Brake Discs": ["Front Brake Disc Pair","Rear Brake Disc Pair","Brake Caliper Bolt Kit"],
+    "Brake Fluid": ["DOT3 Brake Fluid","DOT4 Brake Fluid","DOT5.1 Brake Fluid"],
+    "Coolant": ["OAT Coolant 5L","HOAT Coolant 5L","IAT Green Coolant 5L"],
+    "Thermostat": ["Engine Thermostat","Thermostat Housing Gasket","Coolant Temperature Sensor"],
+    "Water Pump": ["Water Pump Assembly","Water Pump Gasket","Water Pump O-Ring"],
+    "Timing Belt": ["Timing Belt","Timing Belt Tensioner","Timing Belt Idler Pulley","Water Pump (belt-driven)"],
+    "Shock Absorbers": ["Front Shock Absorber x2","Rear Shock Absorber x2","Strut Mount Kit","Bump Stop Rubber"],
+    "Wheel Bearings": ["Front Hub Wheel Bearing","Rear Hub Wheel Bearing","ABS Reluctor Ring"],
+    "Ball Joints": ["Lower Ball Joint","Upper Ball Joint","Ball Joint Boot Kit"],
+    "CV Axle": ["Front CV Axle Shaft","Inner CV Boot Kit","Outer CV Boot Kit","CV Joint Grease"],
+    "Battery": ["12V AGM Battery 60Ah","12V EFB Battery 70Ah","Battery Terminal Connectors"],
+    "Alternator": ["Alternator Assembly","Alternator Drive Belt","Alternator Brush Kit"],
+    "Starter Motor": ["Starter Motor Assembly","Starter Motor Solenoid"],
+    "Glow Plugs": ["Diesel Glow Plug x4","Glow Plug Control Module"],
+    "Clutch Kit": ["Clutch Disc","Pressure Plate","Release Bearing","Pilot Bearing","Flywheel Resurfacing"],
+    "Transmission Fluid": ["ATF Dexron VI 4L","Manual Gearbox Oil 75W90 2L","Dual-Clutch Fluid DSG"],
+  };
+
+  const filteredParts=useMemo(()=>{
+    if(!searchQ.trim()) return Object.entries(SERVICE_PARTS);
+    const q=searchQ.toLowerCase();
+    return Object.entries(SERVICE_PARTS).filter(([k,v])=>k.toLowerCase().includes(q)||v.some(p=>p.toLowerCase().includes(q)));
+  },[searchQ]);
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:20}}>
+      <div>
+        <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Vehicle & Parts Database</h2>
+        <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Browse all supported vehicles and their compatible service parts</p>
+      </div>
+
+      {/* Vehicle Browser */}
+      <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,height:500}}>
+        {/* Makes */}
+        <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+          <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)'}}>
+            <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:0,letterSpacing:'1px'}}>MAKE ({makes.length})</p>
+          </div>
+          <div style={{overflowY:'auto',flex:1}}>
+            {makes.map(m=>(
+              <div key={m} onClick={()=>setSelectedMake(m)} style={{
+                padding:'10px 16px',cursor:'pointer',fontSize:13,fontWeight:600,transition:'background .12s',
+                background:m===selectedMake?'rgba(77,123,255,0.12)':'transparent',
+                color:m===selectedMake?'var(--accent)':'var(--text2)',
+                borderLeft:m===selectedMake?'3px solid var(--accent)':'3px solid transparent'
+              }}>{m}</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Models + Details */}
+        <div style={{display:'flex',flexDirection:'column',gap:12,overflow:'hidden'}}>
+          {/* Model tabs */}
+          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+            {models.map(m=>(
+              <button key={m} className={`tab-btn ${m===selectedModel?'active':''}`} onClick={()=>setSelectedModel(m)}>{m}</button>
+            ))}
+          </div>
+          {/* Year + Engine breakdown */}
+          <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,flex:1,overflow:'auto',padding:16}}>
+            {selectedModel?(
+              <>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                  <div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,var(--accent),var(--accent2))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><ICar/></div>
+                  <div>
+                    <p style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>{selectedMake} {selectedModel}</p>
+                    <p style={{fontSize:11,color:'var(--text3)',margin:0}}>{yearRanges.length} generation(s) in database</p>
+                  </div>
+                </div>
+                {yearRanges.map(([yr,engines])=>(
+                  <div key={yr} style={{marginBottom:12,padding:'12px 14px',borderRadius:14,background:'var(--input-bg)',border:'1px solid var(--border)'}}>
+                    <p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--cyan)',margin:'0 0 8px',letterSpacing:'0.5px'}}>{yr}</p>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                      {engines.map(e=><span key={e} className="tag">{e}</span>)}
+                    </div>
+                  </div>
+                ))}
+              </>
+            ):<p style={{color:'var(--text3)',fontSize:13}}>Select a model above.</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Parts Catalogue */}
+      <div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+          <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Service Parts Catalogue</h3>
+          <div style={{position:'relative'}}>
+            <div style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div>
+            <input className="search-input" style={{paddingLeft:36,width:220}} placeholder="Search parts…" value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:10}}>
+          {filteredParts.map(([category,parts])=>(
+            <div key={category} className="car-db-row">
+              <p style={{fontSize:12,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>{category}</p>
+              <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                {parts.map(p=>(
+                  <div key={p} style={{display:'flex',alignItems:'center',gap:6}}>
+                    <div style={{width:5,height:5,borderRadius:'50%',background:'var(--accent)',flexShrink:0}}/>
+                    <span style={{fontSize:12,color:'var(--text2)'}}>{p}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── MAIN JOBS VIEW ─── */
+function JobsView({shopInfo}){
+  const [jobs,setJobs]=useState(null);
+  const [filter,setFilter]=useState('all');
+  const [search,setSearch]=useState('');
+  const [selected,setSelected]=useState(null);
+  const [prevCount,setPrevCount]=useState(0);
+  const [newAlert,setNewAlert]=useState(false);
+
+  useEffect(()=>{
+    const ref=db.ref('workshop_jobs').limitToLast(100);
+    ref.on('value',snap=>{
+      if(!snap.exists()){setJobs([]);return;}
+      const arr=[];
+      snap.forEach(c=>arr.push({id:c.key,...c.val()}));
+      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      if(arr.length>prevCount&&prevCount>0) setNewAlert(true);
+      setPrevCount(arr.length);
+      setJobs(arr);
+    });
+    return()=>ref.off();
+  },[]);
+
+  useEffect(()=>{if(newAlert){const t=setTimeout(()=>setNewAlert(false),4000);return()=>clearTimeout(t);}},[newAlert]);
+
+  const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
+
+  const filtered=useMemo(()=>{
+    if(!jobs) return [];
+    let r=jobs;
+    if(filter!=='all') r=r.filter(j=>j.status===filter);
+    if(search.trim()){const q=search.toLowerCase();r=r.filter(j=>`${j.vehicle?.make} ${j.vehicle?.model} ${j.vehicle?.reg} ${j.mechanic?.name}`.toLowerCase().includes(q));}
+    return r;
+  },[jobs,filter,search]);
+
+  const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:20}}>
+      {newAlert&&(
+        <div className="anim-up" style={{padding:'12px 18px',borderRadius:14,background:'rgba(77,123,255,0.12)',border:'1px solid rgba(77,123,255,0.3)',display:'flex',alignItems:'center',gap:10}}>
+          <ISparkle/> <span style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>New job received from mechanic!</span>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+        {[
+          {l:'Total Jobs',v:jobs?jobs.length:'–',c:'var(--accent)'},
+          {l:'Pending',v:jobs?jobs.filter(j=>j.status==='pending_approval').length:'–',c:'var(--amber)'},
+          {l:'Approved',v:jobs?jobs.filter(j=>j.status==='approved').length:'–',c:'var(--green)'},
+          {l:'Revenue',v:jobs?`R ${Math.round(revenue).toLocaleString()}`:'–',c:'var(--green)'},
+        ].map(s=>(
+          <div key={s.l} className="stat-card">
+            <p style={{fontSize:10,fontWeight:700,color:'var(--text3)',marginBottom:8,letterSpacing:'0.5px'}}>{s.l.toUpperCase()}</p>
+            <p className="mono" style={{fontSize:22,fontWeight:800,color:s.c,margin:0}}>{s.v}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',gap:6}}>
+          {[['all','All'],['pending_approval','Pending'],['approved','Approved'],['rejected','Rejected']].map(([val,lbl])=>(
+            <button key={val} className={`tab-btn ${filter===val?'active':''}`} onClick={()=>setFilter(val)}>{lbl}</button>
+          ))}
+        </div>
+        <div style={{position:'relative'}}>
+          <div style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div>
+          <input className="search-input" style={{paddingLeft:36,width:240}} placeholder="Search jobs…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+      </div>
+
+      {/* Jobs Table */}
+      <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden'}}>
+        <div style={{padding:'14px 20px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <h3 style={{fontSize:15,fontWeight:800,color:'var(--text)',margin:0}}>Workshop Jobs</h3>
+            <span style={{display:'inline-flex',alignItems:'center',fontSize:11,color:'var(--green)',fontFamily:'JetBrains Mono',fontWeight:600}}>
+              <span className="live-dot"/>LIVE
+            </span>
+          </div>
+          <p style={{fontSize:12,color:'var(--text3)',margin:0}}>{filtered.length} job(s)</p>
+        </div>
+
+        {/* Column Headers */}
+        <div style={{display:'grid',gridTemplateColumns:'2fr 1.5fr 1.2fr 1fr 1fr 120px',gap:16,padding:'10px 20px',borderBottom:'1px solid var(--border)',background:'var(--surface2)'}}>
+          {['Vehicle','Mechanic','Reg / Year','Services','Total','Status'].map(h=>(
+            <span key={h} className="mono" style={{fontSize:9,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px'}}>{h}</span>
+          ))}
+        </div>
+
+        {jobs===null?(
+          <div style={{padding:16,display:'flex',flexDirection:'column',gap:8}}>
+            {[1,2,3,4].map(i=><div key={i} className="skel" style={{height:48}}/>)}
+          </div>
+        ):filtered.length===0?(
+          <div style={{textAlign:'center',padding:'48px 24px',color:'var(--text3)',fontSize:14}}>No jobs match this filter.</div>
+        ):(
+          filtered.map(job=>(
+            <div key={job.id} className="job-row" onClick={()=>setSelected(job)}>
+              <div style={{display:'grid',gridTemplateColumns:'2fr 1.5fr 1.2fr 1fr 1fr 120px',gap:16,padding:'14px 20px',alignItems:'center'}}>
+                <div>
+                  <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{job.vehicle?.make} {job.vehicle?.model}</p>
+                  <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.vehicle?.engine}</p>
+                </div>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600,color:'var(--text2)',margin:0}}>{job.mechanic?.name||'—'}</p>
+                  <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.mechanic?.shop||'—'}</p>
+                </div>
+                <div>
+                  <p className="mono" style={{fontSize:12,fontWeight:700,color:'var(--text)',margin:0}}>{job.vehicle?.reg||'—'}</p>
+                  <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.vehicle?.year||'—'}</p>
+                </div>
+                <span style={{fontSize:13,fontWeight:600,color:'var(--text2)'}}>{(job.services||[]).length} service(s)</span>
+                <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>R {(job.financials?.grandTotal||0).toFixed(0)}</span>
+                <div style={{display:'flex',gap:6',alignItems:'center',justifyContent:'space-between'}}>
+                  <span style={{padding:'3px 9px',borderRadius:100,fontSize:9,fontWeight:700,fontFamily:'JetBrains Mono',
+                    background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='rejected'?'rgba(255,80,80,0.1)':'rgba(255,184,0,0.1)',
+                    color:job.status==='approved'?'var(--green)':job.status==='rejected'?'var(--red)':'var(--amber)',
+                    border:`1px solid ${job.status==='approved'?'rgba(0,255,136,0.2)':job.status==='rejected'?'rgba(255,80,80,0.2)':'rgba(255,184,0,0.2)'}`}}>
+                    {job.status==='pending_approval'?'PENDING':job.status==='approved'?'APPROVED':'REJECTED'}
+                  </span>
+                  <span style={{color:'var(--text3)',fontSize:12}}>›</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {selected&&<JobModal job={selected} onClose={()=>setSelected(null)} onStatusChange={setStatus} shopInfo={shopInfo}/>}
+    </div>
+  );
+}
+
+/* ─── OVERVIEW / ANALYTICS ─── */
+function OverviewView({shopInfo}){
+  const [jobs,setJobs]=useState(null);
+  const [recent,setRecent]=useState(null);
+
+  useEffect(()=>{
+    const ref=db.ref('workshop_jobs').limitToLast(50);
+    ref.on('value',snap=>{
+      if(!snap.exists()){setJobs([]);setRecent([]);return;}
+      const arr=[];
+      snap.forEach(c=>arr.push({id:c.key,...c.val()}));
+      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      setJobs(arr);
+      setRecent(arr.slice(0,5));
+    });
+    return()=>ref.off();
+  },[]);
+
+  const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
+  const [selected,setSelected]=useState(null);
+
+  const pending=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
+  const approved=jobs?jobs.filter(j=>j.status==='approved').length:0;
+  const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
+
+  // Most common services
+  const svcCounts=useMemo(()=>{
+    if(!jobs) return [];
+    const c={};
+    jobs.forEach(j=>(j.services||[]).forEach(s=>{c[s.name]=(c[s.name]||0)+1;}));
+    return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  },[jobs]);
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:20}}>
+      <div>
+        <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Admin Overview</h2>
+        <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Real-time workshop intelligence</p>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
+        {[
+          {l:'Pending Approval',v:pending,c:'var(--amber)',icon:'⏳',sub:'Awaiting your review'},
+          {l:'Approved Today',v:approved,c:'var(--green)',icon:'✅',sub:'Revenue generating'},
+          {l:'Approved Revenue',v:`R ${Math.round(revenue).toLocaleString()}`,c:'var(--green)',icon:'💰',sub:'Incl. VAT'},
+        ].map(s=>(
+          <div key={s.l} className="stat-card" style={{display:'flex',flexDirection:'column',gap:10}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+              <p style={{fontSize:10,fontWeight:700,color:'var(--text3)',margin:0,letterSpacing:'0.5px'}}>{s.l.toUpperCase()}</p>
+              <span style={{fontSize:20}}>{s.icon}</span>
+            </div>
+            <p className="mono" style={{fontSize:26,fontWeight:900,color:s.c,margin:0}}>{s.v}</p>
+            <p style={{fontSize:11,color:'var(--text3)',margin:0}}>{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        {/* Recent Jobs */}
+        <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden'}}>
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:8}}>
+            <h3 style={{fontSize:14,fontWeight:800,color:'var(--text)',margin:0}}>Recent Arrivals</h3>
+            <span style={{fontSize:10,color:'var(--green)',fontFamily:'JetBrains Mono',fontWeight:600,display:'flex',alignItems:'center'}}><span className="live-dot"/>LIVE</span>
+          </div>
+          {recent===null?<div style={{padding:12}}>{[1,2,3].map(i=><div key={i} className="skel" style={{height:44,marginBottom:8}}/>)}</div>
+          :recent.length===0?<p style={{padding:20,color:'var(--text3)',fontSize:13}}>No jobs yet.</p>
+          :recent.map(job=>(
+            <div key={job.id} onClick={()=>setSelected(job)} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 18px',borderBottom:'1px solid var(--border2)',cursor:'pointer',transition:'background .12s'}} className="job-row">
+              <div style={{width:34,height:34,borderRadius:10,background:'rgba(77,123,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)',flexShrink:0}}><ICar/></div>
+              <div style={{flex:1,minWidth:0}}>
+                <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{job.vehicle?.make} {job.vehicle?.model}</p>
+                <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.mechanic?.name} · {job.vehicle?.reg}</p>
+              </div>
+              <div style={{flexShrink:0,textAlign:'right'}}>
+                <span style={{padding:'2px 8px',borderRadius:100,fontSize:9,fontWeight:700,fontFamily:'JetBrains Mono',
+                  background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='pending_approval'?'rgba(255,184,0,0.1)':'rgba(255,80,80,0.1)',
+                  color:job.status==='approved'?'var(--green)':job.status==='pending_approval'?'var(--amber)':'var(--red)',
+                  border:'1px solid transparent'}}>{job.status==='pending_approval'?'PENDING':job.status?.toUpperCase()}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Top Services */}
+        <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden'}}>
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)'}}>
+            <h3 style={{fontSize:14,fontWeight:800,color:'var(--text)',margin:0}}>Most Requested Services</h3>
+          </div>
+          <div style={{padding:'12px 18px'}}>
+            {svcCounts.length===0?<p style={{color:'var(--text3)',fontSize:13}}>No data yet.</p>
+            :svcCounts.map(([name,count],i)=>{
+              const max=svcCounts[0][1];
+              return(
+                <div key={name} style={{marginBottom:14}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}}>
+                    <span style={{fontWeight:600,color:'var(--text)'}}>{name}</span>
+                    <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>{count}×</span>
+                  </div>
+                  <div style={{height:6,borderRadius:100,background:'var(--border)',overflow:'hidden'}}>
+                    <div style={{height:'100%',borderRadius:100,background:`linear-gradient(90deg,var(--accent),var(--cyan))`,width:`${(count/max)*100}%`,transition:'width .6s ease'}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {selected&&<JobModal job={selected} onClose={()=>setSelected(null)} onStatusChange={setStatus} shopInfo={shopInfo}/>}
+    </div>
+  );
+}
+
+/* ─── SETTINGS VIEW ─── */
+function SettingsView({user,profile,onSave}){
+  const [name,setName]=useState(profile.name||'');
+  const [shop,setShop]=useState(profile.shop||'');
+  const [saving,setSaving]=useState(false);
+  const [saved,setSaved]=useState(false);
+
+  const save=async()=>{
+    setSaving(true);
+    try{await db.ref(`users/${user.uid}`).update({name,shop});setSaved(true);setTimeout(()=>setSaved(false),2500);onSave({name,shop});}
+    catch(e){alert(e.message);}
+    setSaving(false);
+  };
+
+  return(
+    <div style={{maxWidth:520}}>
+      <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:'0 0 20px'}}>Admin Settings</h2>
+      <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,padding:24,display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:8}}>
+          <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1a4fff&color=fff`} alt="" style={{width:56,height:56,borderRadius:16,border:'2px solid var(--accent)'}}/>
+          <div>
+            <p style={{fontSize:15,fontWeight:800,color:'var(--text)',margin:0}}>{name||'Admin'}</p>
+            <p style={{fontSize:12,color:'var(--text3)',margin:'3px 0 0'}}>{user.email}</p>
+            <span style={{display:'inline-flex',padding:'2px 10px',borderRadius:100,background:'rgba(77,123,255,0.1)',color:'var(--accent)',fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',border:'1px solid rgba(77,123,255,0.2)',marginTop:4}}>ADMIN</span>
+          </div>
+        </div>
+        <div>
+          <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ADMIN NAME</label>
+          <input className="field" value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/>
+        </div>
+        <div>
+          <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>WORKSHOP / SHOP NAME</label>
+          <input className="field" value={shop} onChange={e=>setShop(e.target.value)} placeholder="e.g. Vynix Auto Centre"/>
+        </div>
+        <button className="btn-p" onClick={save} disabled={saving} style={{width:'100%',padding:'13px',marginTop:4}}>
+          {saving?<ISpin/>:saved?<><ICheck/> Saved!</>:<><ICheck/> Save Settings</>}
+        </button>
+        <div style={{borderTop:'1px solid var(--border)',paddingTop:14}}>
+          <p style={{fontSize:11,fontWeight:700,color:'var(--text3)',margin:'0 0 10px',letterSpacing:'0.5px'}}>DANGER ZONE</p>
+          <button onClick={()=>auth.signOut()} style={{background:'rgba(224,48,48,0.08)',color:'var(--red)',border:'1px solid rgba(224,48,48,0.2)',borderRadius:12,padding:'11px 18px',fontFamily:'Inter',fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',gap:7,width:'100%',justifyContent:'center'}}><ILogout/> Sign Out of Admin</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── MAIN APP ─── */
+function App(){
+  const [user,setUser]=useState(null);
+  const [profile,setProfile]=useState({name:'',shop:''});
+  const [view,setView]=useState('overview');
+  const [loading,setLoading]=useState(true);
+  const [pendingCount,setPendingCount]=useState(0);
+  const [dark,setDark]=useState(()=>{const s=localStorage.getItem('vynix_admin_dark');return s!==null?JSON.parse(s):true;});
+
+  useEffect(()=>{
+    localStorage.setItem('vynix_admin_dark',JSON.stringify(dark));
+    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+    document.getElementById('meta-theme').content=dark?'#070c1a':'#f0f4ff';
+  },[dark]);
+
+  useEffect(()=>{
+    return auth.onAuthStateChanged(u=>{
+      setUser(u);
+      if(u){
+        const ref=db.ref(`users/${u.uid}`);
+        ref.on('value',snap=>{
+          if(snap.exists()) setProfile(snap.val());
+          else{const d={name:u.displayName||'Admin',shop:'VynixPanelB Admin'};ref.set(d);setProfile(d);}
+        });
+      }
+      setLoading(false);
+    });
+  },[]);
+
+  // Live pending count
+  useEffect(()=>{
+    const ref=db.ref('workshop_jobs');
+    ref.on('value',snap=>{
+      let c=0;
+      snap.forEach(j=>{if(j.val().status==='pending_approval')c++;});
+      setPendingCount(c);
+    });
+    return()=>ref.off();
+  },[]);
+
+  const login=async()=>{try{await auth.signInWithPopup(gp);}catch(e){alert(e.message);}};
+
+  if(loading) return <div style={{minHeight:'100dvh',display:'flex',alignItems:'center',justifyContent:'center'}}><ISpin cls="w-10 h-10"/></div>;
+
+  if(!user) return(
+    <div style={{minHeight:'100dvh',display:'flex',alignItems:'center',justifyContent:'center',padding:20,position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 30% 30%,rgba(26,79,255,0.15),transparent 55%),radial-gradient(ellipse at 70% 80%,rgba(0,245,255,0.08),transparent 50%)'}}/>
+      <div className="surface anim-up" style={{width:'100%',maxWidth:400,borderRadius:28,padding:'40px 32px',position:'relative',zIndex:1,boxShadow:'var(--shadow-lg)'}}>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:24}}>
+          <div style={{width:72,height:72,padding:16,borderRadius:20,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',boxShadow:'0 10px 36px rgba(26,79,255,0.5)'}}>
+            <IWrench/>
+          </div>
+        </div>
+        <div style={{textAlign:'center',marginBottom:8}}>
+          <h1 style={{fontSize:28,fontWeight:900,color:'var(--text)',margin:'0 0 4px'}}>VynixPanelB</h1>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 14px',borderRadius:100,background:'linear-gradient(135deg,rgba(255,184,0,0.15),rgba(255,184,0,0.05))',border:'1px solid rgba(255,184,0,0.3)',marginBottom:16}}>
+            <ISparkle/>
+            <span style={{fontSize:12,fontWeight:800,color:'var(--amber)',letterSpacing:'1px'}}>ADMIN DASHBOARD</span>
+          </div>
+        </div>
+        <p style={{textAlign:'center',fontSize:13,color:'var(--text2)',marginBottom:24}}>Sign in with your admin Google account to manage the workshop</p>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:24}}><DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/></div>
+        <button onClick={login} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:12,padding:'15px 20px',borderRadius:100,fontFamily:'Inter',fontWeight:700,fontSize:15,background:'var(--input-bg)',border:'1px solid var(--border)',color:'var(--text)',cursor:'pointer',transition:'all .2s'}}>
+          <IGoog/> Sign in with Google
+        </button>
+      </div>
+    </div>
+  );
+
+  const NAV_ITEMS=[
+    {id:'overview',l:'Overview',I:IDash},
+    {id:'jobs',l:'Workshop Jobs',I:ICar,badge:pendingCount},
+    {id:'database',l:'Car Database',I:IDB},
+    {id:'settings',l:'Settings',I:()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>},
+  ];
+
+  return(
+    <div style={{minHeight:'100dvh',display:'flex'}}>
+      {/* Sidebar */}
+      <nav className="sidebar-admin">
+        {/* Logo */}
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8,padding:'4px 6px'}}>
+          <div style={{width:36,height:36,padding:8,borderRadius:12,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',flexShrink:0}}><IWrench/></div>
+          <div>
+            <p style={{fontSize:14,fontWeight:900,color:'var(--text)',margin:0,letterSpacing:'-0.3px'}}>VynixPanelB</p>
+            <p style={{fontSize:9,color:'var(--amber)',margin:0,fontFamily:'JetBrains Mono',fontWeight:700,letterSpacing:'0.5px'}}>★ ADMIN</p>
+          </div>
+        </div>
+
+        {/* Live indicator */}
+        <div style={{padding:'8px 14px',borderRadius:10,background:'rgba(0,255,136,0.06)',border:'1px solid rgba(0,255,136,0.15)',marginBottom:20,display:'flex',alignItems:'center',gap:7}}>
+          <span className="live-dot"/>
+          <span style={{fontSize:11,fontWeight:600,color:'var(--green)'}}>System Live</span>
+        </div>
+
+        {/* Nav */}
+        <div style={{display:'flex',flexDirection:'column',gap:3,flex:1}}>
+          {NAV_ITEMS.map(({id,l,I,badge})=>(
+            <button key={id} className={`snav ${view===id?'active':''}`} onClick={()=>setView(id)} style={{position:'relative'}}>
+              <I/> {l}
+              {badge>0&&<span className="notif-badge">{badge}</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* Bottom */}
+        <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
+          <div style={{display:'flex',justifyContent:'center',marginBottom:14}}><DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/></div>
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:14,background:'var(--surface)',border:'1px solid var(--border)'}}>
+            <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=ffa500&color=fff`} alt="" style={{width:34,height:34,borderRadius:'50%',flexShrink:0,border:'2px solid var(--amber)'}}/>
+            <div style={{overflow:'hidden',flex:1}}>
+              <p style={{fontSize:12,fontWeight:700,color:'var(--text)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile.name||'Admin'}</p>
+              <p style={{fontSize:10,color:'var(--amber)',margin:'1px 0 0',fontFamily:'JetBrains Mono',fontWeight:600}}>ADMIN</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main */}
+      <main style={{flex:1,padding:'28px 32px',overflowY:'auto',minHeight:'100dvh'}}>
+        <div style={{maxWidth:1100,margin:'0 auto'}}>
+          {view==='overview'&&<OverviewView shopInfo={profile}/>}
+          {view==='jobs'&&<JobsView shopInfo={profile}/>}
+          {view==='database'&&<CarDatabaseView/>}
+          {view==='settings'&&<SettingsView user={user} profile={profile} onSave={setProfile}/>}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
