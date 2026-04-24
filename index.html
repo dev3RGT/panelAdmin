@@ -174,18 +174,6 @@ const DEFAULT_CAR_DB = {
   "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"]}},
 };
 
-const DEFAULT_SERVICE_CATALOG = {
-  "Routine Maintenance":[
-    {id:"oil-change",name:"Engine Oil & Filter Change",labor:1.0,parts:[{name:"Engine Oil (5L)",price:350},{name:"Oil Filter",price:100}],icon:"🛢"},
-    {id:"air-filter",name:"Air Filter Replacement",labor:0.5,parts:[{name:"Air Filter Element",price:320}],icon:"💨"},
-    {id:"spark-plugs",name:"Spark Plug Replacement",labor:1.5,parts:[{name:"Spark Plugs (x4)",price:280}],icon:"⚡"}
-  ],
-  "Brakes":[
-    {id:"brake-pads-front",name:"Front Brake Pad Replacement",labor:1.5,parts:[{name:"Front Brake Pads (Set)",price:850}],icon:"🔴"},
-    {id:"brake-discs-front",name:"Front Brake Disc Replacement",labor:2.0,parts:[{name:"Front Brake Discs (Pair)",price:1200}],icon:"⚙"}
-  ]
-};
-
 /* ── Icons ── */
 const IWrench=()=><svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
 const IDash=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
@@ -417,8 +405,9 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
 /* ════════════════════════════════════════════════════════════
    PARTS CATALOG VIEW
    ════════════════════════════════════════════════════════════ */
-function PartsCatalogView({ partsCatalog }) {
-  const [localParts, setLocalParts] = useState({});
+function PartsCatalogView({ systemData, makes }) {
+  const [selectedMake, setSelectedMake] = useState('default');
+  const [localParts, setLocalParts] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(false);
@@ -427,13 +416,30 @@ function PartsCatalogView({ partsCatalog }) {
   const [newPartName, setNewPartName] = useState('');
   const [addingPartTo, setAddingPartTo] = useState(null);
 
+  // Sync state when systemData or selectedMake changes
   useEffect(() => {
-    if (partsCatalog && Object.keys(partsCatalog).length > 0) {
-      setLocalParts(JSON.parse(JSON.stringify(partsCatalog)));
+    if (selectedMake === 'default') {
+      setLocalParts(JSON.parse(JSON.stringify(systemData?.parts_catalog || DEFAULT_PARTS_CATALOG)));
     } else {
-      setLocalParts(JSON.parse(JSON.stringify(DEFAULT_PARTS_CATALOG)));
+      const makeCat = systemData?.make_catalogs?.[selectedMake];
+      if (makeCat) {
+        setLocalParts(JSON.parse(JSON.stringify(makeCat)));
+      } else {
+        setLocalParts(null); // Indicates no custom catalog exists for this make yet
+      }
     }
-  }, [partsCatalog]);
+    setDirty(false);
+  }, [systemData, selectedMake]);
+
+  const handleInitCustomCatalog = () => {
+    setLocalParts(JSON.parse(JSON.stringify(systemData?.parts_catalog || DEFAULT_PARTS_CATALOG)));
+    setDirty(true);
+  };
+
+  const handleMakeChange = (e) => {
+    if (dirty && !window.confirm('You have unsaved changes. Discard them?')) return;
+    setSelectedMake(e.target.value);
+  };
 
   const handlePartPriceChange = (key, idx, val) => {
     const n = parseInt(val, 10);
@@ -474,7 +480,11 @@ function PartsCatalogView({ partsCatalog }) {
   const save = async () => {
     setSaving(true);
     try {
-      await db.ref('system/parts_catalog').set(localParts);
+      if (selectedMake === 'default') {
+        await db.ref('system/parts_catalog').set(localParts);
+      } else {
+        await db.ref(`system/make_catalogs/${selectedMake}`).set(localParts);
+      }
       setDirty(false);
       setToast(true);
       setTimeout(() => setToast(false), 2800);
@@ -483,6 +493,7 @@ function PartsCatalogView({ partsCatalog }) {
   };
 
   const filtered = useMemo(() => {
+    if (!localParts) return [];
     const entries = Object.entries(localParts);
     if (!search.trim()) return entries;
     const q = search.toLowerCase();
@@ -495,6 +506,7 @@ function PartsCatalogView({ partsCatalog }) {
   }, [localParts, search]);
 
   const totalValue = useMemo(() => {
+    if (!localParts) return 0;
     return Object.values(localParts).reduce((sum, cat) => {
       const catTotal = (cat.parts || []).reduce((s, p) => s + (p.price || 0), 0);
       return sum + catTotal;
@@ -506,7 +518,7 @@ function PartsCatalogView({ partsCatalog }) {
 
       {toast && (
         <div className="save-toast">
-          <ICheck/> Parts prices saved to Firebase!
+          <ICheck/> Pricing saved successfully!
         </div>
       )}
 
@@ -515,132 +527,157 @@ function PartsCatalogView({ partsCatalog }) {
           <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Parts Catalog</h2>
           <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Set individual part prices for mechanics to use when building job quotes.</p>
         </div>
-        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-          <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
-            {Object.keys(localParts).length} categories · R {totalValue.toLocaleString()} total value
-          </div>
-          {dirty && (
-            <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
-              ● Unsaved changes
-            </div>
-          )}
+        
+        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'var(--input-bg)',border:'1px solid var(--border)',padding:'6px 14px',borderRadius:16}}>
+          <label style={{fontSize:12,fontWeight:700,color:'var(--text3)'}}>TARGET PRICING:</label>
+          <select value={selectedMake} onChange={handleMakeChange} style={{background:'var(--bg2)',color:'var(--text)',border:'1px solid var(--border)',padding:'6px 12px',borderRadius:8,fontSize:13,fontWeight:600,outline:'none',cursor:'pointer'}}>
+            <option value="default">Global Default (All Cars)</option>
+            <optgroup label="Car-Specific Pricing overrides">
+              {makes.map(m => <option key={m} value={m}>{m} {systemData?.make_catalogs?.[m] ? ' (Customized)' : ''}</option>)}
+            </optgroup>
+          </select>
         </div>
       </div>
 
-      <div style={{position:'relative',marginBottom:20}}>
-        <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
-        <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
-          placeholder="Search parts or categories…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:14}}>
-        {filtered.map(([key, data]) => {
-          const isEditing = editingKey === key;
-          const isAddingHere = addingPartTo === key;
-          const categoryTotal = (data.parts || []).reduce((s, p) => s + (p.price || 0), 0);
-          
-          return (
-            <div key={key} className={`parts-card ${isEditing ? 'editing' : ''}`}>
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                <div className="parts-icon">{data.icon || '🔧'}</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
-                  <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>
-                    {(data.parts||[]).length} part(s) · <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>R {categoryTotal}</span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => { setEditingKey(isEditing ? null : key); setAddingPartTo(null); setNewPartName(''); }}
-                  style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,fontFamily:'Inter',transition:'all .15s',flexShrink:0}}
-                >
-                  <IEdit/> {isEditing ? 'Done' : 'Edit parts'}
-                </button>
+      {localParts === null ? (
+        <div style={{textAlign:'center',padding:'80px 20px',background:'var(--surface)',borderRadius:16,border:'1px dashed var(--border)'}}>
+          <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>No custom pricing for {selectedMake}</h3>
+          <p style={{fontSize:13,color:'var(--text2)',margin:'0 0 24px',maxWidth:400,marginLeft:'auto',marginRight:'auto'}}>
+            Currently, {selectedMake} vehicles use the <b>Global Default Pricing</b>. If you want to set specific part prices for {selectedMake}, click below to initialize a dedicated catalog.
+          </p>
+          <button className="btn-p" onClick={handleInitCustomCatalog}><IPlus/> Create Custom Pricing for {selectedMake}</button>
+        </div>
+      ) : (
+        <>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:20}}>
+            <div style={{position:'relative',flex:1}}>
+              <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
+              <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
+                placeholder={`Search ${selectedMake==='default'?'Global':'Custom '+selectedMake} parts…`}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            
+            <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
+              {Object.keys(localParts).length} categories · R {totalValue.toLocaleString()} total value
+            </div>
+            {dirty && (
+              <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
+                ● Unsaved changes
               </div>
+            )}
+          </div>
 
-              <div style={{display:'flex',flexDirection:'column',gap:0}}>
-                {(data.parts || []).map((part, idx) => {
-                  const partObj = typeof part === 'string' ? {name: part, price: 0} : part;
-                  return (
-                    <div key={idx} className="part-item" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid var(--border2)'}}>
-                      <span className="part-dot"/>
-                      <span style={{flex:1,fontSize:12,color:'var(--text2)',textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={partObj.name}>{partObj.name}</span>
-                      
-                      <div className="price-input-wrap" style={{padding:'4px 8px'}}>
-                        <span style={{fontSize:11}}>R</span>
-                        <input
-                          type="number"
-                          value={partObj.price || 0}
-                          onChange={e => handlePartPriceChange(key, idx, e.target.value)}
-                          min={0}
-                          step={10}
-                          style={{width:60,fontSize:13}}
-                        />
-                      </div>
-                      
-                      {isEditing && (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:14}}>
+            {filtered.map(([key, data]) => {
+              const isEditing = editingKey === key;
+              const isAddingHere = addingPartTo === key;
+              const categoryTotal = (data.parts || []).reduce((s, p) => s + (p.price || 0), 0);
+              
+              return (
+                <div key={key} className={`parts-card ${isEditing ? 'editing' : ''}`}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                    <div className="parts-icon">{data.icon || '🔧'}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
+                      <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>
+                        {(data.parts||[]).length} part(s) · <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>R {categoryTotal}</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => { setEditingKey(isEditing ? null : key); setAddingPartTo(null); setNewPartName(''); }}
+                      style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,fontFamily:'Inter',transition:'all .15s',flexShrink:0}}
+                    >
+                      <IEdit/> {isEditing ? 'Done' : 'Edit parts'}
+                    </button>
+                  </div>
+
+                  <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                    {(data.parts || []).map((part, idx) => {
+                      const partObj = typeof part === 'string' ? {name: part, price: 0} : part;
+                      return (
+                        <div key={idx} className="part-item" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid var(--border2)'}}>
+                          <span className="part-dot"/>
+                          <span style={{flex:1,fontSize:12,color:'var(--text2)',textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={partObj.name}>{partObj.name}</span>
+                          
+                          <div className="price-input-wrap" style={{padding:'4px 8px'}}>
+                            <span style={{fontSize:11}}>R</span>
+                            <input
+                              type="number"
+                              value={partObj.price || 0}
+                              onChange={e => handlePartPriceChange(key, idx, e.target.value)}
+                              min={0}
+                              step={10}
+                              style={{width:60,fontSize:13}}
+                            />
+                          </div>
+                          
+                          {isEditing && (
+                            <button
+                              onClick={() => handleRemovePart(key, idx)}
+                              style={{background:'rgba(255,80,80,0.08)',border:'1px solid rgba(255,80,80,0.2)',borderRadius:6,padding:'2px 7px',cursor:'pointer',color:'var(--red)',fontSize:11,fontWeight:700,fontFamily:'JetBrains Mono',flexShrink:0,lineHeight:1.4}}
+                            >×</button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {isEditing && (
+                    <div style={{marginTop:10}}>
+                      {isAddingHere ? (
+                        <div style={{display:'flex',gap:6,marginTop:6}}>
+                          <input
+                            className="field"
+                            style={{padding:'7px 12px',fontSize:12,flex:1}}
+                            placeholder="Part name…"
+                            value={newPartName}
+                            onChange={e => setNewPartName(e.target.value)}
+                            onKeyDown={e => { if(e.key==='Enter') handleAddPart(key); if(e.key==='Escape'){ setAddingPartTo(null); setNewPartName(''); } }}
+                            autoFocus
+                          />
+                          <button className="btn-p" style={{padding:'7px 14px',fontSize:12}} onClick={() => handleAddPart(key)}>Add</button>
+                          <button className="btn-g" style={{padding:'7px 10px',fontSize:12}} onClick={() => { setAddingPartTo(null); setNewPartName(''); }}>✕</button>
+                        </div>
+                      ) : (
                         <button
-                          onClick={() => handleRemovePart(key, idx)}
-                          style={{background:'rgba(255,80,80,0.08)',border:'1px solid rgba(255,80,80,0.2)',borderRadius:6,padding:'2px 7px',cursor:'pointer',color:'var(--red)',fontSize:11,fontWeight:700,fontFamily:'JetBrains Mono',flexShrink:0,lineHeight:1.4}}
-                        >×</button>
+                          onClick={() => { setAddingPartTo(key); setNewPartName(''); }}
+                          style={{width:'100%',marginTop:6,padding:'7px',borderRadius:10,border:'1px dashed var(--accent)',background:'rgba(77,123,255,0.04)',color:'var(--accent)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
+                        >
+                          <IPlus/> Add new part
+                        </button>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-
-              {isEditing && (
-                <div style={{marginTop:10}}>
-                  {isAddingHere ? (
-                    <div style={{display:'flex',gap:6,marginTop:6}}>
-                      <input
-                        className="field"
-                        style={{padding:'7px 12px',fontSize:12,flex:1}}
-                        placeholder="Part name…"
-                        value={newPartName}
-                        onChange={e => setNewPartName(e.target.value)}
-                        onKeyDown={e => { if(e.key==='Enter') handleAddPart(key); if(e.key==='Escape'){ setAddingPartTo(null); setNewPartName(''); } }}
-                        autoFocus
-                      />
-                      <button className="btn-p" style={{padding:'7px 14px',fontSize:12}} onClick={() => handleAddPart(key)}>Add</button>
-                      <button className="btn-g" style={{padding:'7px 10px',fontSize:12}} onClick={() => { setAddingPartTo(null); setNewPartName(''); }}>✕</button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => { setAddingPartTo(key); setNewPartName(''); }}
-                      style={{width:'100%',marginTop:6,padding:'7px',borderRadius:10,border:'1px dashed var(--accent)',background:'rgba(77,123,255,0.04)',color:'var(--accent)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
-                    >
-                      <IPlus/> Add new part
-                    </button>
                   )}
                 </div>
-              )}
+              );
+            })}
+          </div>
+
+          {filtered.length === 0 && (
+            <div style={{textAlign:'center',padding:'60px 24px',color:'var(--text3)',fontSize:14}}>
+              No categories match "{search}"
             </div>
-          );
-        })}
-      </div>
+          )}
 
-      {filtered.length === 0 && (
-        <div style={{textAlign:'center',padding:'60px 24px',color:'var(--text3)',fontSize:14}}>
-          No categories match "{search}"
-        </div>
+          <div className="parts-save-banner">
+            <div>
+              <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
+                {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
+              </p>
+              <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
+                Saved to: <span className="mono" style={{fontSize:11}}>
+                  {selectedMake === 'default' ? 'Global Default Pricing' : `Overrides Pricing for ${selectedMake}`}
+                </span>
+              </p>
+            </div>
+            <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
+              {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save Pricing</>}
+            </button>
+          </div>
+        </>
       )}
-
-      <div className="parts-save-banner">
-        <div>
-          <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
-            {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
-          </p>
-          <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
-            Saved at: <span className="mono" style={{fontSize:11}}>system/parts_catalog</span>
-          </p>
-        </div>
-        <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
-          {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save All Prices</>}
-        </button>
-      </div>
     </div>
   );
 }
@@ -651,8 +688,6 @@ function PartsCatalogView({ partsCatalog }) {
 function SystemDatabaseView({ systemData }){
   const [tab, setTab] = useState('vehicles');
   const carDB = systemData?.car_db || {};
-  const services = systemData?.services || {};
-  const partsCatalog = systemData?.parts_catalog || {};
 
   const makes = useMemo(() => Object.keys(carDB).sort(), [carDB]);
   const [selectedMake, setSelectedMake] = useState('');
@@ -729,36 +764,6 @@ function SystemDatabaseView({ systemData }){
     setAdding(false);
   };
 
-  const [localServices, setLocalServices] = useState(services);
-  const [savingPrices, setSavingPrices] = useState(false);
-  
-  // Re-sync local state when Firebase updates
-  useEffect(() => { setLocalServices(services); }, [services]);
-
-  const handleSvcPartPriceChange = (category, svcId, pIdx, newPrice) => {
-    const val = parseInt(newPrice, 10);
-    setLocalServices(prev => ({
-      ...prev,
-      [category]: prev[category].map(s => {
-        if (s.id !== svcId) return s;
-        // Ensure parts are objects
-        const updatedParts = (s.parts||[]).map(p => typeof p === 'string' ? {name: p, price: 0} : {...p});
-        updatedParts[pIdx].price = isNaN(val) ? 0 : val;
-        
-        // Auto update total service base price purely for legacy compatibility (optional)
-        const total = updatedParts.reduce((sum, p) => sum + (p.price||0), 0);
-        
-        return { ...s, parts: updatedParts, price: total };
-      })
-    }));
-  };
-
-  const savePrices = async () => {
-    setSavingPrices(true);
-    try { await db.ref('system/services').set(localServices); setTimeout(() => setSavingPrices(false), 800); }
-    catch(e) { alert(e.message); setSavingPrices(false); }
-  };
-
   return (
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       <div>
@@ -767,9 +772,8 @@ function SystemDatabaseView({ systemData }){
       </div>
       <div style={{display:'flex',gap:6,borderBottom:'1px solid var(--border)',paddingBottom:12,flexWrap:'wrap'}}>
         <button className={`tab-btn ${tab==='vehicles'?'active':''}`} onClick={()=>setTab('vehicles')}>Vehicle Directory</button>
-        <button className={`tab-btn ${tab==='pricing'?'active':''}`} onClick={()=>setTab('pricing')}>Services &amp; Pricing</button>
         <button className={`tab-btn ${tab==='parts'?'active':''}`} onClick={()=>setTab('parts')} style={{display:'flex',alignItems:'center',gap:6}}>
-          <ITag/> Parts Catalog
+          <ITag/> Parts Catalog & Pricing
         </button>
       </div>
 
@@ -870,70 +874,9 @@ function SystemDatabaseView({ systemData }){
         </div>
       )}
 
-      {tab === 'pricing' && (
-        <div className="anim-up">
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-            <div>
-              <p style={{fontSize:14,fontWeight:700,color:'var(--text)',margin:0}}>Pricing & Services</p>
-              <p style={{fontSize:13,color:'var(--text2)',margin:0}}>Edit individual part prices required for each service.</p>
-            </div>
-            <button className="btn-p" onClick={savePrices} disabled={savingPrices}>
-              {savingPrices?<ISpin cls="w-4 h-4"/>:<><ISave/> Save All Prices</>}
-            </button>
-          </div>
-          
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))',gap:16}}>
-            {Object.entries(localServices).map(([category, items])=>(
-              <div key={category} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:16}}>
-                <p className="mono" style={{fontSize:10,fontWeight:800,color:'var(--accent)',margin:'0 0 12px',letterSpacing:'0.5px'}}>{category.toUpperCase()}</p>
-                
-                <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                  {items.map(svc => {
-                    const svcParts = (svc.parts||[]).map(p => typeof p === 'string' ? {name: p, price: 0} : p);
-                    const svcTotal = svcParts.reduce((sum, p) => sum + (p.price||0), 0);
-                    
-                    return (
-                      <div key={svc.id} style={{display:'flex',flexDirection:'column',gap:10,borderBottom:'1px solid var(--border2)',paddingBottom:12}}>
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                          <p style={{fontSize:13,fontWeight:600,color:'var(--text)',margin:0}}>{svc.icon} {svc.name}</p>
-                          <p style={{fontSize:11,color:'var(--text3)',margin:0}}>{svc.labor}h labour</p>
-                        </div>
-                        
-                        <div style={{display:'flex',flexDirection:'column',gap:6,paddingLeft:24}}>
-                          {svcParts.length === 0 && <span style={{fontSize:11,color:'var(--text3)'}}>Labour only</span>}
-                          {svcParts.map((part, pIdx) => (
-                            <div key={pIdx} style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                              <span style={{fontSize:12,color:'var(--text2)',flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} title={part.name}>• {part.name}</span>
-                              <div className="price-input-wrap" style={{padding:'4px 8px', marginLeft:8}}>
-                                <span>R</span>
-                                <input 
-                                  type="number" 
-                                  value={part.price || 0} 
-                                  onChange={e => handleSvcPartPriceChange(category, svc.id, pIdx, e.target.value)} 
-                                  style={{width:60,fontSize:13}}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div style={{display:'flex',justifyContent:'space-between',borderTop:'1px dashed var(--border)',paddingTop:8,marginTop:4}}>
-                          <span style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>PARTS TOTAL</span>
-                          <span className="mono" style={{fontSize:13,fontWeight:800,color:'var(--accent)'}}>R {svcTotal}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {tab === 'parts' && (
         <div className="anim-up">
-          <PartsCatalogView partsCatalog={partsCatalog}/>
+          <PartsCatalogView systemData={systemData} makes={makes}/>
         </div>
       )}
     </div>
