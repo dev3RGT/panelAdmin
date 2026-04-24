@@ -41,6 +41,8 @@
     .field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:11px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;transition:all .2s}
     .field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
     .field::placeholder{color:var(--text3)}
+    select.field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238896cc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;cursor:pointer}
+    select.field option{background:var(--bg2);color:var(--text)}
     .btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:100px;padding:11px 22px;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
     .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
     .btn-p:active{transform:scale(0.97)}
@@ -80,6 +82,9 @@
     .print-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,184,110,0.35)}
     .search-input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:9px 16px 9px 40px;outline:none;font-family:'Inter',sans-serif;font-size:13px;width:100%;transition:all .2s}
     .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    /* combo field: text input + datalist */
+    .combo-wrap{position:relative;width:100%}
+    .combo-wrap input.field{width:100%}
 
     .auth-gate{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity .4s ease}
     .auth-gate.hidden{opacity:0;pointer-events:none}
@@ -92,6 +97,10 @@
 
     @media print{body *{visibility:hidden}.print-area,.print-area *{visibility:visible}.print-area{position:fixed;top:0;left:0;width:100%;padding:20px}button{display:none!important}}
     input[type=number]::-webkit-inner-spin-button{opacity:1}
+
+    /* model tabs scroll */
+    .model-tabs-wrap{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+    .model-tabs-wrap::-webkit-scrollbar{display:none}
   </style>
 </head>
 <body>
@@ -110,17 +119,13 @@
 <div id="root"></div>
 
 <script>
-  /* ─── FIREBASE INIT (before React) ─── */
   const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
   if(!firebase.apps.length) firebase.initializeApp(FC);
 
-  /* ─── ROUTE GUARD ─── */
   firebase.auth().onAuthStateChanged(function(user) {
     if (!user) {
       document.getElementById('authGateText').textContent = 'Redirecting to login…';
-      setTimeout(function() {
-        window.location.href = 'login.html';
-      }, 700);
+      setTimeout(function() { window.location.href = 'login.html'; }, 700);
     } else {
       const gate = document.getElementById('authGate');
       gate.classList.add('hidden');
@@ -128,7 +133,6 @@
     }
   });
 
-  /* ─── THEME INIT ─── */
   (function() {
     const s = localStorage.getItem('vynix_admin_dark');
     const dark = s !== null ? JSON.parse(s) : true;
@@ -140,14 +144,15 @@
 <script type="text/babel">
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const auth=firebase.auth(), db=firebase.database(), gp=new firebase.auth.GoogleAuthProvider();
+const auth=firebase.auth(), db=firebase.database();
 
 const LABOR=750;
 
-/* ─── DEFAULT DATABASE (Used to seed Firebase if empty) ─── */
 const DEFAULT_CAR_DB={
   "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]}},
-  "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"]}}
+  "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"]}},
+  "Ford":{"Ranger":{"2019-2023":["2.0L Bi-Turbo Diesel","2.2L TDCi","3.2L TDCi"],"2015-2018":["2.2L TDCi","3.2L TDCi"]},"EcoSport":{"2018-2022":["1.0L EcoBoost","1.5L Ti-VCT"]}},
+  "Hyundai":{"Tucson":{"2021-2023":["1.6L T-GDI","2.0L MPi"],"2016-2020":["2.0L GDI","1.6L T-GDI"]},"i20":{"2021-2023":["1.2L MPI","1.0L T-GDI"]}}
 };
 
 const DEFAULT_SERVICE_CATALOG = {
@@ -303,17 +308,73 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
   );
 }
 
+/* ─── COMBOBOX: select from list OR type custom ─── */
+function ComboField({ label, value, onChange, options, placeholder, listId }) {
+  return (
+    <div>
+      <label style={{fontSize:10,fontWeight:700,color:'var(--text3)',display:'block',marginBottom:6,letterSpacing:'0.5px'}}>{label}</label>
+      <div className="combo-wrap">
+        <input
+          className="field"
+          list={listId}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+        />
+        <datalist id={listId}>
+          {options.map(o => <option key={o} value={o}/>)}
+        </datalist>
+      </div>
+    </div>
+  );
+}
+
 /* ─── SYSTEM DATABASE VIEW ─── */
 function SystemDatabaseView({ systemData }){
   const [tab, setTab] = useState('vehicles');
   const carDB = systemData?.car_db || {};
   const services = systemData?.services || {};
 
-  /* Vehicle Tab State */
-  const [selectedMake,setSelectedMake]=useState(Object.keys(carDB)[0] || '');
-  const [selectedModel,setSelectedModel]=useState('');
-  
-  /* Add Vehicle Form State */
+  /* ── Vehicle Tab ── */
+  // selectedMake stored separately; selectedModel reset whenever make changes
+  const makes = useMemo(() => Object.keys(carDB).sort(), [carDB]);
+  const [selectedMake, setSelectedMake] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
+
+  // On first load, default to first make
+  useEffect(() => {
+    if (!selectedMake && makes.length > 0) {
+      setSelectedMake(makes[0]);
+    }
+  }, [makes]);
+
+  // Compute models for current make
+  const models = useMemo(() => {
+    if (!selectedMake || !carDB[selectedMake]) return [];
+    return Object.keys(carDB[selectedMake]).sort();
+  }, [carDB, selectedMake]);
+
+  // When make changes → reset model to first available
+  const handleMakeSelect = useCallback((make) => {
+    setSelectedMake(make);
+    const m = Object.keys(carDB[make] || {}).sort();
+    setSelectedModel(m[0] || '');
+  }, [carDB]);
+
+  // When model list updates and selectedModel is not in it, pick first
+  useEffect(() => {
+    if (models.length > 0 && !models.includes(selectedModel)) {
+      setSelectedModel(models[0]);
+    }
+  }, [models]);
+
+  const yearRanges = useMemo(() => {
+    if (!selectedMake || !selectedModel) return [];
+    return Object.entries(carDB[selectedMake]?.[selectedModel] || {});
+  }, [carDB, selectedMake, selectedModel]);
+
+  /* ── Add Vehicle Form ── */
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMake, setNewMake] = useState('');
   const [newModel, setNewModel] = useState('');
@@ -321,35 +382,61 @@ function SystemDatabaseView({ systemData }){
   const [newEngine, setNewEngine] = useState('');
   const [adding, setAdding] = useState(false);
 
-  /* Pricing Tab State */
-  const [localServices, setLocalServices] = useState(services);
-  const [savingPrices, setSavingPrices] = useState(false);
-  
-  useEffect(()=>{ setLocalServices(services); },[services]);
+  // Derive suggestion lists from current DB
+  const allMakes = useMemo(() => Object.keys(carDB).sort(), [carDB]);
+  const modelsForNewMake = useMemo(() => {
+    if (!newMake || !carDB[newMake]) return [];
+    return Object.keys(carDB[newMake]).sort();
+  }, [carDB, newMake]);
+  const yearsForNewModel = useMemo(() => {
+    if (!newMake || !newModel || !carDB[newMake]?.[newModel]) return [];
+    return Object.keys(carDB[newMake][newModel]).sort();
+  }, [carDB, newMake, newModel]);
+  const enginesForNewYear = useMemo(() => {
+    if (!newMake || !newModel || !newYear) return [];
+    return carDB[newMake]?.[newModel]?.[newYear] || [];
+  }, [carDB, newMake, newModel, newYear]);
 
-  const makes=Object.keys(carDB).sort();
-  const models=selectedMake?Object.keys(carDB[selectedMake]||{}).sort():[];
-  useEffect(()=>{setSelectedModel(models[0]||'');},[selectedMake, models]);
-  const yearRanges=selectedMake&&selectedModel?Object.entries(carDB[selectedMake]?.[selectedModel]||{}):[];
+  // Suggested year ranges
+  const YEAR_SUGGESTIONS = [
+    '2020-2024','2019-2023','2018-2022','2017-2021','2016-2020',
+    '2015-2019','2014-2018','2013-2017','2010-2015','2005-2010',
+  ];
+  const ENGINE_SUGGESTIONS = [
+    '1.0L Turbo','1.2L MPI','1.4L TSI','1.5L','1.6L','1.8L','2.0L',
+    '2.0L Turbo Diesel','2.2L Diesel','2.4L','2.5L','2.8L Diesel',
+    '3.0L V6','3.5L V6','4.0L V8',
+  ];
 
   const handleAddVehicle = async () => {
-    if(!newMake || !newModel || !newYear || !newEngine) return alert("Please fill all fields.");
+    const make = newMake.trim();
+    const model = newModel.trim();
+    const year = newYear.trim();
+    const engine = newEngine.trim();
+    if (!make || !model || !year || !engine) return alert('Please fill all fields.');
     setAdding(true);
     try {
-      const path = `system/car_db/${newMake.trim()}/${newModel.trim()}/${newYear.trim()}`;
+      const path = `system/car_db/${make}/${model}/${year}`;
       const ref = db.ref(path);
       const snap = await ref.once('value');
-      const currentEngines = snap.exists() ? snap.val() : [];
-      if(!currentEngines.includes(newEngine.trim())) {
-        currentEngines.push(newEngine.trim());
+      const currentEngines = snap.exists() && Array.isArray(snap.val()) ? snap.val() : [];
+      if (!currentEngines.includes(engine)) {
+        currentEngines.push(engine);
         await ref.set(currentEngines);
       }
       setShowAddForm(false);
       setNewMake(''); setNewModel(''); setNewYear(''); setNewEngine('');
-      setSelectedMake(newMake.trim());
+      // Navigate to newly added entry
+      setSelectedMake(make);
+      setTimeout(() => setSelectedModel(model), 300);
     } catch(e) { alert(e.message); }
     setAdding(false);
   };
+
+  /* ── Pricing Tab ── */
+  const [localServices, setLocalServices] = useState(services);
+  const [savingPrices, setSavingPrices] = useState(false);
+  useEffect(() => { setLocalServices(services); }, [services]);
 
   const handlePriceChange = (category, svcId, newPrice) => {
     const val = parseInt(newPrice, 10);
@@ -363,11 +450,11 @@ function SystemDatabaseView({ systemData }){
     setSavingPrices(true);
     try {
       await db.ref('system/services').set(localServices);
-      setTimeout(()=> setSavingPrices(false), 800);
+      setTimeout(() => setSavingPrices(false), 800);
     } catch(e) { alert(e.message); setSavingPrices(false); }
   };
 
-  return(
+  return (
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       <div>
         <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>System Database</h2>
@@ -376,55 +463,149 @@ function SystemDatabaseView({ systemData }){
 
       <div style={{display:'flex',gap:6,borderBottom:'1px solid var(--border)',paddingBottom:12}}>
         <button className={`tab-btn ${tab==='vehicles'?'active':''}`} onClick={()=>setTab('vehicles')}>Vehicle Directory</button>
-        <button className={`tab-btn ${tab==='pricing'?'active':''}`} onClick={()=>setTab('pricing')}>Services & Pricing</button>
+        <button className={`tab-btn ${tab==='pricing'?'active':''}`} onClick={()=>setTab('pricing')}>Services &amp; Pricing</button>
       </div>
 
       {tab === 'vehicles' && (
-        <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,height:500}}>
+        <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,minHeight:500}}>
+          {/* Make list */}
           <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,overflow:'hidden',display:'flex',flexDirection:'column'}}>
             <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)'}}>
               <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:0,letterSpacing:'1px'}}>MAKE ({makes.length})</p>
             </div>
             <div style={{overflowY:'auto',flex:1}}>
-              {makes.map(m=><div key={m} onClick={()=>setSelectedMake(m)} style={{padding:'10px 16px',cursor:'pointer',fontSize:13,fontWeight:600,transition:'background .12s',background:m===selectedMake?'rgba(77,123,255,0.12)':'transparent',color:m===selectedMake?'var(--accent)':'var(--text2)',borderLeft:m===selectedMake?'3px solid var(--accent)':'3px solid transparent'}}>{m}</div>)}
+              {makes.map(m => (
+                <div
+                  key={m}
+                  onClick={() => handleMakeSelect(m)}
+                  style={{
+                    padding:'10px 16px',cursor:'pointer',fontSize:13,fontWeight:600,
+                    transition:'background .12s',
+                    background:m===selectedMake?'rgba(77,123,255,0.12)':'transparent',
+                    color:m===selectedMake?'var(--accent)':'var(--text2)',
+                    borderLeft:m===selectedMake?'3px solid var(--accent)':'3px solid transparent'
+                  }}
+                >{m}</div>
+              ))}
             </div>
           </div>
-          
-          <div style={{display:'flex',flexDirection:'column',gap:12,overflow:'hidden'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{models.map(m=><button key={m} className={`tab-btn ${m===selectedModel?'active':''}`} onClick={()=>setSelectedModel(m)}>{m}</button>)}</div>
-              <button className="btn-p" onClick={()=>setShowAddForm(!showAddForm)} style={{padding:'7px 14px',fontSize:12}}><IPlus/> Add Vehicle</button>
+
+          {/* Model tabs + detail */}
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+              {/* Horizontally scrollable model tabs */}
+              <div className="model-tabs-wrap" style={{flex:1}}>
+                {models.map(m => (
+                  <button
+                    key={m}
+                    className={`tab-btn ${m===selectedModel?'active':''}`}
+                    onClick={() => setSelectedModel(m)}
+                  >{m}</button>
+                ))}
+                {models.length === 0 && (
+                  <span style={{fontSize:13,color:'var(--text3)'}}>No models — add one below.</span>
+                )}
+              </div>
+              <button className="btn-p" onClick={()=>setShowAddForm(!showAddForm)} style={{padding:'7px 14px',fontSize:12,flexShrink:0}}>
+                <IPlus/> Add Vehicle
+              </button>
             </div>
-            
-            <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,flex:1,overflow:'auto',padding:16}}>
+
+            <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,flex:1,overflow:'auto',padding:16,minHeight:400}}>
+
+              {/* ── ADD FORM ── */}
               {showAddForm ? (
-                <div className="anim-up" style={{background:'var(--input-bg)', border:'1px solid var(--border)', borderRadius:14, padding:20}}>
-                  <h3 style={{fontSize:15,fontWeight:800,marginBottom:14}}>Add New Vehicle to Database</h3>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
-                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>MAKE</label><input className="field" value={newMake} onChange={e=>setNewMake(e.target.value)} placeholder="e.g. Toyota" /></div>
-                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>MODEL</label><input className="field" value={newModel} onChange={e=>setNewModel(e.target.value)} placeholder="e.g. Hilux" /></div>
-                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>YEAR RANGE</label><input className="field" value={newYear} onChange={e=>setNewYear(e.target.value)} placeholder="e.g. 2020-2024" /></div>
-                    <div><label style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>ENGINE</label><input className="field" value={newEngine} onChange={e=>setNewEngine(e.target.value)} placeholder="e.g. 2.8L GD-6" /></div>
+                <div className="anim-up" style={{background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:14,padding:20}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                    <h3 style={{fontSize:15,fontWeight:800,color:'var(--text)',margin:0}}>Add New Vehicle to Database</h3>
+                    <button className="btn-g" style={{padding:'5px 12px',fontSize:12}} onClick={()=>setShowAddForm(false)}><IClose/> Cancel</button>
                   </div>
+                  <p style={{fontSize:12,color:'var(--text3)',margin:'0 0 16px'}}>
+                    Select from existing entries or type a new value in any field.
+                  </p>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:18}}>
+                    <ComboField
+                      label="MAKE"
+                      listId="dl-make"
+                      value={newMake}
+                      onChange={v => { setNewMake(v); setNewModel(''); setNewYear(''); setNewEngine(''); }}
+                      options={allMakes}
+                      placeholder="e.g. Toyota"
+                    />
+                    <ComboField
+                      label="MODEL"
+                      listId="dl-model"
+                      value={newModel}
+                      onChange={v => { setNewModel(v); setNewYear(''); setNewEngine(''); }}
+                      options={modelsForNewMake}
+                      placeholder="e.g. Hilux"
+                    />
+                    <ComboField
+                      label="YEAR RANGE"
+                      listId="dl-year"
+                      value={newYear}
+                      onChange={v => { setNewYear(v); setNewEngine(''); }}
+                      options={[...yearsForNewModel, ...YEAR_SUGGESTIONS.filter(y => !yearsForNewModel.includes(y))]}
+                      placeholder="e.g. 2020-2024"
+                    />
+                    <ComboField
+                      label="ENGINE"
+                      listId="dl-engine"
+                      value={newEngine}
+                      onChange={setNewEngine}
+                      options={[...enginesForNewYear, ...ENGINE_SUGGESTIONS.filter(e => !enginesForNewYear.includes(e))]}
+                      placeholder="e.g. 2.8L GD-6 Diesel"
+                    />
+                  </div>
+
+                  {/* Preview */}
+                  {newMake && newModel && newYear && newEngine && (
+                    <div className="anim-up" style={{padding:'10px 14px',borderRadius:10,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',marginBottom:16,fontSize:12,color:'var(--text2)'}}>
+                      <span style={{color:'var(--accent)',fontWeight:700}}>Preview: </span>
+                      {newMake} {newModel} ({newYear}) — <span className="mono" style={{fontSize:11}}>{newEngine}</span>
+                    </div>
+                  )}
+
                   <div style={{display:'flex',gap:10}}>
-                    <button className="btn-p" onClick={handleAddVehicle} disabled={adding}>{adding?<ISpin cls="w-4 h-4"/>:'Save to Database'}</button>
-                    <button className="btn-g" onClick={()=>setShowAddForm(false)}>Cancel</button>
+                    <button className="btn-p" onClick={handleAddVehicle} disabled={adding||!newMake||!newModel||!newYear||!newEngine}>
+                      {adding ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save to Database</>}
+                    </button>
+                    <button className="btn-g" onClick={()=>{setShowAddForm(false);setNewMake('');setNewModel('');setNewYear('');setNewEngine('');}}>Cancel</button>
                   </div>
                 </div>
+
               ) : selectedModel ? (
+                /* ── VEHICLE DETAIL ── */
                 <>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-                    <div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,var(--accent),var(--accent2))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><ICar/></div>
-                    <div><p style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>{selectedMake} {selectedModel}</p><p style={{fontSize:11,color:'var(--text3)',margin:0}}>{yearRanges.length} generation(s) in database</p></div>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+                    <div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,var(--accent),var(--accent2))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>
+                      <ICar/>
+                    </div>
+                    <div>
+                      <p style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>{selectedMake} {selectedModel}</p>
+                      <p style={{fontSize:11,color:'var(--text3)',margin:0}}>{yearRanges.length} generation(s) in database</p>
+                    </div>
                   </div>
-                  {yearRanges.map(([yr,engines])=>(
+                  {yearRanges.length === 0 && (
+                    <p style={{color:'var(--text3)',fontSize:13}}>No year ranges found for this model.</p>
+                  )}
+                  {yearRanges.map(([yr, engines]) => (
                     <div key={yr} style={{marginBottom:12,padding:'12px 14px',borderRadius:14,background:'var(--input-bg)',border:'1px solid var(--border)'}}>
                       <p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--cyan)',margin:'0 0 8px',letterSpacing:'0.5px'}}>{yr}</p>
-                      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>{engines.map(e=><span key={e} className="tag">{e}</span>)}</div>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                        {(Array.isArray(engines) ? engines : []).map(e => (
+                          <span key={e} className="tag">{e}</span>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </>
-              ) : <p style={{color:'var(--text3)',fontSize:13}}>Select a make and model above.</p>}
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:300,gap:12,color:'var(--text3)'}}>
+                  <ICar/>
+                  <p style={{fontSize:13,margin:0}}>Select a make from the left, then choose a model tab above.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -435,10 +616,9 @@ function SystemDatabaseView({ systemData }){
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
             <p style={{fontSize:13,color:'var(--text2)',margin:0}}>Set the base price in Rand (R) for each service.</p>
             <button className="btn-p" onClick={savePrices} disabled={savingPrices}>
-              {savingPrices ? <ISpin cls="w-4 h-4" /> : <><ISave/> Save All Prices</>}
+              {savingPrices ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save All Prices</>}
             </button>
           </div>
-          
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:16}}>
             {Object.entries(localServices).map(([category, items]) => (
               <div key={category} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:16}}>
@@ -452,10 +632,10 @@ function SystemDatabaseView({ systemData }){
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
                         <span style={{fontSize:13,color:'var(--text2)',fontWeight:600}}>R</span>
-                        <input 
-                          className="field" 
-                          type="number" 
-                          value={svc.price} 
+                        <input
+                          className="field"
+                          type="number"
+                          value={svc.price}
                           onChange={(e) => handlePriceChange(category, svc.id, e.target.value)}
                           style={{width:80,padding:'6px 10px',textAlign:'right',fontFamily:'JetBrains Mono',fontWeight:700}}
                         />
@@ -477,10 +657,8 @@ function JobsView({ jobs, shopInfo }){
   const [filter,setFilter]=useState('all');
   const [search,setSearch]=useState('');
   const [selected,setSelected]=useState(null);
-  
   const prevCountRef = useRef(jobs ? jobs.length : 0);
   const [newAlert,setNewAlert]=useState(false);
-  
   useEffect(()=>{
     if (jobs && jobs.length > prevCountRef.current && prevCountRef.current > 0) {
       setNewAlert(true);
@@ -488,11 +666,9 @@ function JobsView({ jobs, shopInfo }){
     }
     if (jobs) prevCountRef.current = jobs.length;
   }, [jobs]);
-  
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
   const filtered=useMemo(()=>{if(!jobs)return[];let r=jobs;if(filter!=='all')r=r.filter(j=>j.status===filter);if(search.trim()){const q=search.toLowerCase();r=r.filter(j=>`${j.vehicle?.make} ${j.vehicle?.model} ${j.vehicle?.reg} ${j.mechanic?.name}`.toLowerCase().includes(q));}return r;},[jobs,filter,search]);
   const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
-  
   return(
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       {newAlert&&<div className="anim-up" style={{padding:'12px 18px',borderRadius:14,background:'rgba(77,123,255,0.12)',border:'1px solid rgba(77,123,255,0.3)',display:'flex',alignItems:'center',gap:10}}><ISparkle/><span style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>New job received from mechanic!</span></div>}
@@ -539,15 +715,12 @@ function JobsView({ jobs, shopInfo }){
 /* ─── OVERVIEW ─── */
 function OverviewView({ jobs, shopInfo }){
   const [selected,setSelected]=useState(null);
-  
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
   const pending=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
   const approved=jobs?jobs.filter(j=>j.status==='approved').length:0;
   const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
   const recent=jobs?jobs.slice(0,5):null;
-  
   const svcCounts=useMemo(()=>{if(!jobs)return[];const c={};jobs.forEach(j=>(j.services||[]).forEach(s=>{c[s.name]=(c[s.name]||0)+1;}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5);},[jobs]);
-  
   return(
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       <div><h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Admin Overview</h2><p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Real-time workshop intelligence</p></div>
@@ -598,11 +771,7 @@ function SettingsView({user,profile,onSave}){
   const [saving,setSaving]=useState(false);
   const [saved,setSaved]=useState(false);
   const save=async()=>{setSaving(true);try{await db.ref(`users/${user.uid}`).update({name,shop});setSaved(true);setTimeout(()=>setSaved(false),2500);onSave({name,shop});}catch(e){alert(e.message);}setSaving(false);};
-
-  const handleSignOut = async () => {
-    try { await auth.signOut(); window.location.href = 'login.html'; } catch(e) { alert(e.message); }
-  };
-
+  const handleSignOut=async()=>{try{await auth.signOut();window.location.href='login.html';}catch(e){alert(e.message);}};
   return(
     <div style={{maxWidth:520}}>
       <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:'0 0 20px'}}>Admin Settings</h2>
@@ -635,12 +804,9 @@ function App(){
   const [profile,setProfile]=useState({name:'',shop:''});
   const [view,setView]=useState('overview');
   const [ready,setReady]=useState(false);
-  
-  // SINGLE SOURCE OF TRUTH for Jobs & System Rules
-  const [jobs, setJobs] = useState(null);
-  const [systemData, setSystemData] = useState(null);
-  const [pendingCount, setPendingCount] = useState(0);
-
+  const [jobs,setJobs]=useState(null);
+  const [systemData,setSystemData]=useState(null);
+  const [pendingCount,setPendingCount]=useState(0);
   const [dark,setDark]=useState(()=>{const s=localStorage.getItem('vynix_admin_dark');return s!==null?JSON.parse(s):true;});
 
   useEffect(()=>{
@@ -663,43 +829,25 @@ function App(){
     });
   },[]);
 
-  // Central System Settings Listener (Cars & Prices)
-  useEffect(() => {
-    const sysRef = db.ref('system');
-    const sysCb = sysRef.on('value', snap => {
-      if(snap.exists()){
-        setSystemData(snap.val());
-      } else {
-        // Seed Firebase if empty
-        const seed = { car_db: DEFAULT_CAR_DB, services: DEFAULT_SERVICE_CATALOG };
-        sysRef.set(seed);
-        setSystemData(seed);
-      }
-    });
-    return () => sysRef.off('value', sysCb);
-  }, []);
-
-  // Central Jobs Listener
   useEffect(()=>{
-    const ref = db.ref('workshop_jobs').limitToLast(500);
-    const cb = ref.on('value', snap => {
-      if(!snap.exists()) {
-        setJobs([]);
-        setPendingCount(0);
-        return;
-      }
-      const arr = [];
-      let c = 0;
-      snap.forEach(child => {
-        const val = child.val();
-        arr.push({ id: child.key, ...val });
-        if(val.status === 'pending_approval') c++;
-      });
-      arr.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
-      setJobs(arr);
-      setPendingCount(c);
+    const sysRef=db.ref('system');
+    const sysCb=sysRef.on('value',snap=>{
+      if(snap.exists()){setSystemData(snap.val());}
+      else{const seed={car_db:DEFAULT_CAR_DB,services:DEFAULT_SERVICE_CATALOG};sysRef.set(seed);setSystemData(seed);}
     });
-    return () => ref.off('value', cb);
+    return()=>sysRef.off('value',sysCb);
+  },[]);
+
+  useEffect(()=>{
+    const ref=db.ref('workshop_jobs').limitToLast(500);
+    const cb=ref.on('value',snap=>{
+      if(!snap.exists()){setJobs([]);setPendingCount(0);return;}
+      const arr=[];let c=0;
+      snap.forEach(child=>{const val=child.val();arr.push({id:child.key,...val});if(val.status==='pending_approval')c++;});
+      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      setJobs(arr);setPendingCount(c);
+    });
+    return()=>ref.off('value',cb);
   },[]);
 
   if(!ready||!user||!systemData) return null;
@@ -747,7 +895,7 @@ function App(){
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           {view==='overview'&&<OverviewView jobs={jobs} shopInfo={profile}/>}
           {view==='jobs'&&<JobsView jobs={jobs} shopInfo={profile}/>}
-          {view==='database'&&<SystemDatabaseView systemData={systemData} />}
+          {view==='database'&&<SystemDatabaseView systemData={systemData}/>}
           {view==='settings'&&<SettingsView user={user} profile={profile} onSave={setProfile}/>}
         </div>
       </main>
