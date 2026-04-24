@@ -70,7 +70,7 @@
     .dm-btn{width:30px;height:30px;border-radius:100px;display:flex;align-items:center;justify-content:center;transition:all .25s;color:var(--text3)}
     .dm-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px var(--accent-glow)}
     .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);animation:overlayIn .2s ease}
-    .modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:201;background:var(--bg2);border:1px solid var(--border);border-radius:24px;width:min(92vw,680px);max-height:88vh;overflow-y:auto;padding:32px;box-shadow:var(--shadow-lg);animation:modalIn .3s cubic-bezier(.16,1,.3,1)}
+    .modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:201;background:var(--bg2);border:1px solid var(--border);border-radius:24px;width:min(92vw,680px);max-height:88vh;overflow-y:auto;padding:32px;box-shadow:var(--shadow-lg);animation:modalIn .3s cubic-bezier(.16,1,.3,1)}}
     .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:100px;font-size:10px;font-weight:800;padding:1px 5px;font-family:'JetBrains Mono',monospace;animation:badgePop .3s ease;border:2px solid var(--bg2)}
     .tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(77,123,255,0.08);color:var(--accent);border:1px solid rgba(77,123,255,0.18);margin:2px;font-family:'JetBrains Mono'}
     .print-btn{background:linear-gradient(135deg,#00b86e,#007a4a);color:#fff;border:none;border-radius:100px;padding:10px 20px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
@@ -79,7 +79,6 @@
     .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
     .model-tabs-wrap{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
     .model-tabs-wrap::-webkit-scrollbar{display:none}
-    /* Custom dropdown */
     .dd-wrap{position:relative;width:100%}
     .dd-input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:11px 40px 11px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;transition:all .2s;cursor:pointer}
     .dd-input:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
@@ -100,6 +99,21 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     @media print{body *{visibility:hidden}.print-area,.print-area *{visibility:visible}.print-area{position:fixed;top:0;left:0;width:100%;padding:20px}button{display:none!important}}
     input[type=number]::-webkit-inner-spin-button{opacity:1}
+
+    /* ── Parts Catalog specific ── */
+    .parts-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;transition:border-color .2s,box-shadow .2s}
+    .parts-card:hover{border-color:rgba(77,123,255,0.3);box-shadow:0 4px 20px rgba(77,123,255,0.08)}
+    .parts-card.editing{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .part-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border2)}
+    .part-item:last-child{border-bottom:none}
+    .part-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .price-input-wrap{display:flex;align-items:center;gap:6px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:10px;padding:6px 12px;transition:all .2s}
+    .price-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:rgba(77,123,255,0.06)}
+    .price-input-wrap span{font-size:13px;color:var(--text3);font-weight:700;font-family:'JetBrains Mono'}
+    .price-input-wrap input{background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono';font-weight:800;font-size:15px;width:90px;text-align:right}
+    .parts-save-banner{position:sticky;bottom:16px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-radius:16px;background:linear-gradient(135deg,rgba(77,123,255,0.18),rgba(77,123,255,0.08));border:1px solid rgba(77,123,255,0.35);backdrop-filter:blur(12px);z-index:10;margin-top:20px}
+    .parts-icon{font-size:22px;line-height:1}
+    .save-toast{position:fixed;bottom:32px;right:32px;z-index:9999;padding:12px 20px;border-radius:14px;background:var(--green);color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,255,136,0.35);animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
   </style>
 </head>
 <body>
@@ -131,399 +145,63 @@ const auth=firebase.auth(), db=firebase.database();
 const LABOR=750;
 
 /* ════════════════════════════════════════════════════════════
+   DEFAULT PARTS CATALOG  (seeded to Firebase on first load)
+   ════════════════════════════════════════════════════════════ */
+const DEFAULT_PARTS_CATALOG = {
+  "Engine Oil & Filter":   { icon:"🛢", price:450,  parts:["Engine Oil (5L)","Oil Filter","Drain Plug Washer"] },
+  "Air Filter":            { icon:"💨", price:220,  parts:["Air Filter Element"] },
+  "Cabin Filter":          { icon:"🌬", price:180,  parts:["Cabin Air Filter / Pollen Filter"] },
+  "Spark Plugs":           { icon:"⚡", price:380,  parts:["Iridium Spark Plugs x4","Copper Spark Plugs x4"] },
+  "Fuel Filter":           { icon:"⛽", price:290,  parts:["Inline Fuel Filter","In-tank Fuel Filter"] },
+  "Brake Pads":            { icon:"🔴", price:620,  parts:["Front Brake Pad Set","Rear Brake Pad Set","Brake Pad Shim Kit"] },
+  "Brake Discs":           { icon:"⚙",  price:980,  parts:["Front Brake Disc Pair","Rear Brake Disc Pair","Brake Caliper Bolt Kit"] },
+  "Brake Fluid":           { icon:"🔵", price:160,  parts:["DOT3 Brake Fluid","DOT4 Brake Fluid","DOT5.1 Brake Fluid"] },
+  "Coolant":               { icon:"🌡", price:240,  parts:["OAT Coolant 5L","HOAT Coolant 5L","IAT Green Coolant 5L"] },
+  "Thermostat":            { icon:"🌡", price:320,  parts:["Engine Thermostat","Thermostat Housing Gasket","Coolant Temperature Sensor"] },
+  "Water Pump":            { icon:"💧", price:750,  parts:["Water Pump Assembly","Water Pump Gasket","Water Pump O-Ring"] },
+  "Timing Belt":           { icon:"⏱", price:1200, parts:["Timing Belt","Timing Belt Tensioner","Timing Belt Idler Pulley","Water Pump (belt-driven)"] },
+  "Shock Absorbers":       { icon:"🚗", price:1800, parts:["Front Shock Absorber x2","Rear Shock Absorber x2","Strut Mount Kit","Bump Stop Rubber"] },
+  "Wheel Bearings":        { icon:"🔩", price:850,  parts:["Front Hub Wheel Bearing","Rear Hub Wheel Bearing","ABS Reluctor Ring"] },
+  "Ball Joints":           { icon:"🔧", price:680,  parts:["Lower Ball Joint","Upper Ball Joint","Ball Joint Boot Kit"] },
+  "CV Axle":               { icon:"🔗", price:1100, parts:["Front CV Axle Shaft","Inner CV Boot Kit","Outer CV Boot Kit","CV Joint Grease"] },
+  "Battery":               { icon:"🔋", price:1400, parts:["12V AGM Battery 60Ah","12V EFB Battery 70Ah","Battery Terminal Connectors"] },
+  "Alternator":            { icon:"⚡", price:2200, parts:["Alternator Assembly","Alternator Drive Belt","Alternator Brush Kit"] },
+  "Starter Motor":         { icon:"🔌", price:1600, parts:["Starter Motor Assembly","Starter Motor Solenoid"] },
+  "Glow Plugs":            { icon:"🕯", price:420,  parts:["Diesel Glow Plug x4","Glow Plug Control Module"] },
+  "Clutch Kit":            { icon:"🔄", price:3200, parts:["Clutch Disc","Pressure Plate","Release Bearing","Pilot Bearing","Flywheel Resurfacing"] },
+  "Transmission Fluid":    { icon:"🔁", price:480,  parts:["ATF Dexron VI 4L","Manual Gearbox Oil 75W90 2L","Dual-Clutch Fluid DSG"] },
+};
+
+/* ════════════════════════════════════════════════════════════
    WORLD CAR DATABASE
    ════════════════════════════════════════════════════════════ */
 const WORLD_CARS = {
-  "Acura": {
-    models: ["ILX","Integra","MDX","NSX","RDX","RLX","TL","TLX","TSX","ZDX"],
-    engines: ["1.5L Turbo","2.0L Turbo","2.4L VTEC","3.0L V6","3.2L V6","3.5L V6","3.7L V6","Sport Hybrid SH-AWD"]
-  },
-  "Alfa Romeo": {
-    models: ["147","156","159","166","4C","Brera","Giulia","Giulietta","GTV","MiTo","Spider","Stelvio","Tonale"],
-    engines: ["1.4L Turbo","1.6L JTDm Diesel","1.7L TBi","1.8L TB","2.0L Turbo","2.2L JTDm Diesel","2.4L JTDm Diesel","2.9L Bi-Turbo V6","3.0L V6 Turbo","Quadrifoglio 2.9L Twin-Turbo"]
-  },
-  "Aston Martin": {
-    models: ["DB7","DB9","DB11","DBS","DBX","Rapide","Vantage","Virage","Vulcan"],
-    engines: ["4.0L Twin-Turbo V8","5.2L Twin-Turbo V12","6.0L V12","6.3L AMR V8","AMG 4.0L V8"]
-  },
-  "Audi": {
-    models: ["A1","A2","A3","A4","A5","A6","A7","A8","Q2","Q3","Q4 e-tron","Q5","Q7","Q8","R8","RS3","RS4","RS5","RS6","RS7","RS Q8","S3","S4","S5","S6","S7","S8","SQ5","SQ7","SQ8","TT","TTS"],
-    engines: ["1.0L TFSI","1.2L TFSI","1.4L TFSI","1.5L TFSI","1.6L TDI","1.8L TFSI","2.0L TFSI","2.0L TDI","2.5L TFSI RS","2.9L Bi-Turbo V6 TFSI","3.0L TFSI","3.0L TDI","4.0L TDI V8","4.0L TFSI V8","5.2L FSI V10"]
-  },
-  "Bentley": {
-    models: ["Bentayga","Continental GT","Continental GTC","Flying Spur","Mulsanne"],
-    engines: ["4.0L V8","6.0L W12 Bi-Turbo","6.75L V8 Turbo"]
-  },
-  "BMW": {
-    models: ["1 Series","2 Series","3 Series","4 Series","5 Series","6 Series","7 Series","8 Series","i3","i4","i5","i7","iX","M2","M3","M4","M5","M6","M8","X1","X2","X3","X3M","X4","X4M","X5","X5M","X6","X6M","X7","Z3","Z4"],
-    engines: ["1.5L Turbo 3-Cylinder","2.0L TwinPower Turbo","2.0L Diesel TwinPower","2.5L Inline-6","3.0L TwinPower Turbo Inline-6","3.0L Diesel TwinPower","4.4L V8 TwinPower Turbo","4.4L M V8","5.0L V10 (M5/M6)","6.6L V12"]
-  },
-  "Bugatti": {
-    models: ["Chiron","Divo","La Voiture Noire","Veyron"],
-    engines: ["8.0L W16 Quad-Turbo"]
-  },
-  "Buick": {
-    models: ["Cascada","Enclave","Encore","Encore GX","Envision","LaCrosse","Regal","Verano"],
-    engines: ["1.4L Turbo","1.5L Turbo","2.0L Turbo","2.5L","3.6L V6"]
-  },
-  "BYD": {
-    models: ["Atto 3","Han","Song","Tang","Seal","Dolphin","Seagull"],
-    engines: ["1.5L Turbo","2.0L Turbo","BYD Blade Battery EV","Plug-in Hybrid DM-i 1.5L"]
-  },
-  "Cadillac": {
-    models: ["ATS","CT4","CT5","CT6","Escalade","Lyriq","XT4","XT5","XT6"],
-    engines: ["2.0L Turbo","2.7L Turbo","3.0L Twin-Turbo","3.6L V6","4.2L Twin-Turbo V8","6.2L V8","6.2L Supercharged V8 Blackwing"]
-  },
-  "Chery": {
-    models: ["Arrizo 5","Arrizo 6","Tiggo 3","Tiggo 4","Tiggo 5X","Tiggo 7","Tiggo 8"],
-    engines: ["1.5L Turbo","1.6L","2.0L Turbo"]
-  },
-  "Chevrolet": {
-    models: ["Aveo","Blazer","Camaro","Colorado","Corvette","Cruze","Equinox","Express","Impala","Malibu","Orlando","Silverado 1500","Silverado 2500HD","Spark","Suburban","Tahoe","Tracker","Trailblazer","Traverse","Trax"],
-    engines: ["1.0L Turbo","1.2L Turbo","1.3L Turbo","1.4L Turbo","1.5L Turbo","1.6L Diesel","2.0L Turbo","2.5L","2.7L Turbo","3.0L Duramax Diesel","3.5L V6","3.6L V6","4.3L V6","5.3L EcoTec3 V8","6.2L EcoTec3 V8","6.6L Duramax Diesel","LT4 6.2L Supercharged V8","LT2 6.2L V8"]
-  },
-  "Chrysler": {
-    models: ["300","Grand Voyager","Pacifica","Voyager"],
-    engines: ["2.4L","3.5L V6","3.6L Pentastar V6","5.7L HEMI V8","6.4L HEMI V8"]
-  },
-  "Citroën": {
-    models: ["Berlingo","C1","C2","C3","C3 Aircross","C4","C4 Cactus","C4 Picasso","C5","C5 Aircross","C5 X","C6","DS3","DS4","DS5","Grand Picasso","SpaceTourer"],
-    engines: ["1.0L PureTech","1.2L PureTech Turbo","1.4L HDi Diesel","1.5L BlueHDi Diesel","1.6L THP Turbo","1.6L HDi Diesel","1.6L BlueHDi","2.0L BlueHDi Diesel","2.2L HDi Diesel"]
-  },
-  "Dacia": {
-    models: ["Dokker","Duster","Jogger","Logan","Lodgy","Sandero","Spring"],
-    engines: ["0.9L TCe Turbo","1.0L SCe","1.0L TCe","1.3L TCe Turbo","1.5L dCi Diesel","1.6L SCe"]
-  },
-  "Daewoo": {
-    models: ["Kalos","Lacetti","Lanos","Matiz","Nubira"],
-    engines: ["1.2L","1.4L","1.5L","1.6L","1.8L"]
-  },
-  "Daihatsu": {
-    models: ["Charade","Cuore","Gran Max","Mira","Move","Rocky","Sirion","Terios","Xenia"],
-    engines: ["0.66L 3-Cylinder","0.66L Turbo","1.0L","1.3L","1.5L"]
-  },
-  "Dodge": {
-    models: ["Challenger","Charger","Dakota","Dart","Durango","Grand Caravan","Journey","Ram 1500","Ram 2500","Viper"],
-    engines: ["1.4L Turbo","2.0L","2.4L","3.2L Pentastar V6","3.5L V6","3.6L Pentastar V6","5.7L HEMI V8","6.2L Supercharged HEMI V8","6.4L HEMI V8","8.4L V10"]
-  },
-  "Ferrari": {
-    models: ["296 GTB","488 GTB","488 Spider","812 Superfast","California","GTC4Lusso","F8","Portofino","Roma","SF90 Stradale"],
-    engines: ["3.9L Twin-Turbo V8","4.5L V8","6.5L V12","Twin-Turbo 3.0L V6 Hybrid"]
-  },
-  "Fiat": {
-    models: ["124 Spider","500","500L","500X","Bravo","Doblo","Freemont","Grande Punto","Linea","Panda","Punto","Stilo","Tipo"],
-    engines: ["0.9L TwinAir Turbo","1.0L Firefly Hybrid","1.3L MultiJet Diesel","1.4L","1.4L Turbo","1.6L MultiJet Diesel","1.6L E-Torq","1.9L JTD Diesel","2.0L MultiJet Diesel"]
-  },
-  "Ford": {
-    models: ["B-Max","C-Max","EcoSport","Edge","Endura","Escape","Everest","Explorer","F-150","F-250","F-350","Fiesta","Focus","Fusion","Galaxy","Ka","Kuga","Maverick","Mondeo","Mustang","Mustang Mach-E","Puma","Ranger","S-Max","Territory","Transit","Transit Connect"],
-    engines: ["1.0L EcoBoost","1.1L Ti-VCT","1.3L EcoBoost","1.4L TDCi Diesel","1.5L EcoBoost","1.5L EcoBlue Diesel","1.5L Ti-VCT","1.6L EcoBoost","1.6L TDCi Diesel","2.0L EcoBoost","2.0L EcoBlue Diesel","2.0L Bi-Turbo Diesel","2.3L EcoBoost","2.5L Duratec","2.5L PHEV","2.7L EcoBoost V6","3.0L EcoBoost V6","3.5L EcoBoost V6","3.5L TiVCT V6","5.0L Coyote V8","5.0L Dragon V8","5.2L Voodoo V8 GT350","7.3L Godzilla V8"]
-  },
-  "Geely": {
-    models: ["Atlas","Boyue","Coolray","Emgrand","Icon","Okavango","Preface","Tugella"],
-    engines: ["1.0L Turbo","1.4L Turbo","1.5L Turbo","1.8L Turbo","2.0L Turbo"]
-  },
-  "Genesis": {
-    models: ["G70","G80","G90","GV70","GV80"],
-    engines: ["2.0L Turbo","2.5L Turbo","3.3L Twin-Turbo V6","3.5L V6","5.0L V8"]
-  },
-  "GMC": {
-    models: ["Acadia","Canyon","Envoy","Sierra 1500","Sierra 2500HD","Sierra 3500HD","Terrain","Yukon"],
-    engines: ["1.5L Turbo","2.0L Turbo","2.7L Turbo","3.0L Duramax Diesel","3.6L V6","4.3L V6","5.3L V8","6.2L V8","6.6L Duramax Diesel V8","6.6L Allison Gas V8"]
-  },
-  "Great Wall": {
-    models: ["Poer","Steed","Wingle"],
-    engines: ["2.0L Turbo Diesel","2.5L Diesel","4D20 2.0L Diesel"]
-  },
-  "Haval": {
-    models: ["H1","H2","H4","H5","H6","H7","H8","H9","Jolion","F7","Raptor"],
-    engines: ["1.5L Turbo","2.0L Turbo Diesel","2.0L Turbo"]
-  },
-  "Honda": {
-    models: ["Accord","Amaze","BR-V","City","Civic","CR-V","CR-Z","Element","Fit","FR-V","HR-V","Insight","Jazz","Legend","Odyssey","Passport","Pilot","Ridgeline","S2000","Shuttle","Stream","WR-V","ZR-V"],
-    engines: ["0.6L i-DSI","1.0L Turbo","1.2L i-VTEC","1.3L i-VTEC","1.4L i-DSI","1.5L VTEC Turbo","1.5L i-VTEC","1.5L Hybrid","1.6L i-DTEC Diesel","1.7L i-VTEC","1.8L i-VTEC","2.0L i-VTEC","2.0L Turbo","2.0L DOHC","2.2L i-DTEC Diesel","2.4L K24 i-VTEC","3.0L V6","3.5L V6","3.5L VTEC V6","NSX 3.5L Twin-Turbo Hybrid V6"]
-  },
-  "Hummer": {
-    models: ["H1","H2","H3","EV"],
-    engines: ["3.5L Turbo Diesel","6.0L V8","6.2L V8","Ultium EV Motors"]
-  },
-  "Hyundai": {
-    models: ["Accent","Azera","Bayon","Creta","Elantra","IONIQ","IONIQ 5","IONIQ 6","Kona","Nexo","Palisade","Santa Cruz","Santa Fe","Sonata","Staria","Terracan","Tucson","Veloster","Venue"],
-    engines: ["1.0L T-GDI Turbo","1.1L CRDi Diesel","1.2L MPI","1.4L T-GDI Turbo","1.4L CRDi Diesel","1.5L MPI","1.5L T-GDI Turbo","1.6L T-GDI Turbo","1.6L CRDi Diesel","1.8L MPI","2.0L MPI","2.0L T-GDI Turbo","2.2L CRDi Diesel","2.4L GDI","2.5L MPI","3.3L Twin-Turbo V6","3.5L V6 MPi","N 2.0L Turbo","Fuel Cell Electric"]
-  },
-  "Infiniti": {
-    models: ["EX","FX","G37","M","Q30","Q50","Q60","Q70","QX30","QX50","QX55","QX60","QX70","QX80"],
-    engines: ["2.0L Turbo","2.5L V6","3.0L Twin-Turbo V6","3.5L V6","3.7L V6","5.6L V8"]
-  },
-  "Isuzu": {
-    models: ["D-Max","MU-X","Trooper","KB","Crosswind"],
-    engines: ["1.9L DDi Diesel","2.5L TD Diesel","3.0L TD Diesel","3.0L Twin-Turbo DDi","3.5L V6"]
-  },
-  "Jaguar": {
-    models: ["E-Pace","E-Type","F-Pace","F-Type","I-Pace","S-Type","X-Type","XE","XF","XJ","XK"],
-    engines: ["2.0L P200 Turbo","2.0L P250 Turbo","2.0L D150 Diesel","2.0L D165 Diesel","2.0L D180 Diesel","2.0L D204 Diesel","3.0L Supercharged V6","3.0L D300 Diesel V6","4.2L V8","5.0L Supercharged V8","5.0L SVR V8"]
-  },
-  "Jeep": {
-    models: ["Cherokee","Commander","Compass","Gladiator","Grand Cherokee","Grand Wagoneer","Meridian","Renegade","Wrangler"],
-    engines: ["1.3L Turbo","1.4L Turbo","2.0L Turbo","2.2L Diesel","2.4L Tigershark","2.7L Bi-Turbo","3.0L EcoDiesel V6","3.2L Pentastar V6","3.6L Pentastar V6","4.0L Inline-6","4x4e PHEV","5.7L HEMI V8","6.2L Supercharged V8","6.4L HEMI V8"]
-  },
-  "Kia": {
-    models: ["Carnival","Ceed","Cerato","EV6","EV9","Mohave","Niro","Picanto","ProCeed","Rio","Seltos","Sonet","Sorento","Soul","Sportage","Stinger","Stonic","Telluride","XCeed"],
-    engines: ["1.0L T-GDI Turbo","1.2L MPI","1.4L T-GDI Turbo","1.4L CRDi Diesel","1.5L MPI","1.5L T-GDI Turbo","1.6L T-GDI Turbo","1.6L CRDi Diesel","2.0L MPi","2.0L T-GDI Turbo","2.2L CRDi Diesel","2.5L MPI","3.3L Twin-Turbo V6","3.5L V6","3.8L V6","5.0L V8"]
-  },
-  "Lamborghini": {
-    models: ["Aventador","Gallardo","Huracán","Urus"],
-    engines: ["4.0L Twin-Turbo V8","5.2L Naturally Aspirated V10","6.5L Naturally Aspirated V12"]
-  },
-  "Land Rover": {
-    models: ["Defender","Discovery","Discovery Sport","Freelander","Range Rover","Range Rover Evoque","Range Rover Sport","Range Rover Velar"],
-    engines: ["1.5L Ingenium P300e PHEV","2.0L Ingenium Petrol","2.0L Ingenium Diesel","3.0L Inline-6 MHEV","3.0L Ingenium Diesel","4.4L BMW V8","5.0L Supercharged V8","5.0L SVR V8"]
-  },
-  "Lexus": {
-    models: ["CT","ES","GS","GX","IS","LC","LFA","LS","LX","NX","RC","RX","RZ","UX"],
-    engines: ["1.8L Hybrid","2.0L Turbo","2.0L Hybrid","2.5L Hybrid","3.3L Diesel V6","3.5L V6","3.5L Hybrid V6","4.0L V8","4.6L V8","5.0L V8","LC 3.5L Hybrid V6"]
-  },
-  "Lincoln": {
-    models: ["Aviator","Corsair","MKC","MKT","MKX","MKZ","Navigator"],
-    engines: ["2.0L EcoBoost","2.3L EcoBoost","2.7L EcoBoost V6","3.0L Twin-Turbo V6","3.5L EcoBoost V6","5.4L V8"]
-  },
-  "Lotus": {
-    models: ["Eletre","Elise","Emira","Evija","Evora","Exige"],
-    engines: ["1.8L Toyota Supercharged","2.0L Turbo","3.5L Toyota V6","Emira 3.5L V6 / 2.0L AMG","Electric Quad Motor"]
-  },
-  "Mahindra": {
-    models: ["Bolero","Pickup","Scorpio","Thar","XUV300","XUV500","XUV700"],
-    engines: ["1.2L mStallion Turbo","1.5L Diesel","2.0L Diesel","2.2L mHawk Diesel","2.7L V6"]
-  },
-  "Maserati": {
-    models: ["Ghibli","GranTurismo","Grecale","Levante","MC20","Quattroporte"],
-    engines: ["2.0L Nettuno V6 Turbo","2.0L Turbo PHEV","3.0L V6","3.8L Twin-Turbo V8"]
-  },
-  "Mazda": {
-    models: ["2","3","6","CX-3","CX-30","CX-5","CX-50","CX-60","CX-8","CX-90","MX-5 Miata","MX-30"],
-    engines: ["1.3L","1.5L SkyActiv-G","1.5L SkyActiv-D Diesel","1.5L SkyActiv-X","1.8L SkyActiv-D Diesel","2.0L SkyActiv-G","2.0L SkyActiv-X","2.2L SkyActiv-D Diesel","2.5L SkyActiv-G","2.5L SkyActiv-G Turbo","3.3L SkyActiv-G Turbo Inline-6","3.3L SkyActiv-D Diesel Inline-6","Electric MX-30"]
-  },
-  "McLaren": {
-    models: ["540C","570S","600LT","620R","650S","675LT","720S","750S","765LT","Artura","GT","P1","Senna","Speedtail"],
-    engines: ["3.8L Twin-Turbo V8","3.8L Longtail V8","3.8L PHEV Hybrid","4.0L Twin-Turbo V8"]
-  },
-  "Mercedes-Benz": {
-    models: ["A-Class","AMG GT","B-Class","C-Class","CLA","CLE","CLK","CLS","E-Class","EQA","EQB","EQC","EQE","EQS","G-Class","GLA","GLB","GLC","GLE","GLS","S-Class","SL","SLC","Sprinter","V-Class","Vito"],
-    engines: ["1.3L Turbo","1.5L Diesel","1.6L Turbo","2.0L Turbo M260","2.0L Turbo M264","2.0L Diesel OM654","3.0L Inline-6 Turbo M256","3.0L Diesel Inline-6","4.0L AMG V8 Biturbo","4.0L AMG GT V8","5.5L AMG V8","6.0L AMG V12 Biturbo","Electric EQ"]
-  },
-  "MINI": {
-    models: ["Clubman","Convertible","Cooper","Countryman","Coupe","Hatch","Paceman","Roadster"],
-    engines: ["1.2L Turbo","1.5L Turbo 3-Cylinder","2.0L Turbo 4-Cylinder","2.0L TwinPower S","JCW 2.0L Turbo"]
-  },
-  "Mitsubishi": {
-    models: ["ASX","Colt","Eclipse Cross","Galant","L200 Triton","Lancer","Mirage","Montero Sport","Outlander","Pajero","Pajero Sport","RVR","Space Star","Xpander"],
-    engines: ["1.0L MIVEC","1.2L MIVEC","1.2L Turbo","1.5L MIVEC","1.8L PHEV","2.0L MIVEC","2.0L PHEV","2.2L DI-D Diesel","2.3L Turbo Diesel","2.4L MIVEC","2.5L MIVEC Diesel","3.0L V6","3.2L DI-D Diesel","3.5L V6"]
-  },
-  "Nissan": {
-    models: ["370Z","400Z","Almera","Armada","Frontier","GT-R","Juke","Kicks","Leaf","Magnite","Maxima","Micra","Murano","Navara","Note","NP200","NP300 Hardbody","Pathfinder","Patrol","Qashqai","Rogue","Sentra","Terra","Tiida","Titan","Versa","X-Trail"],
-    engines: ["1.0L DIG-T Turbo","1.0L HR10DE","1.2L HR12DE","1.5L HR15DE","1.6L DIG-T","1.6L dCi Diesel","1.8L MR18DE","2.0L MR20DE","2.0L VC-Turbo","2.3L SD23 Diesel","2.5L QR25DE","2.5L YD25DDTi Diesel","3.0L V9X Diesel","3.5L VQ35DE V6","3.8L VR38DETT Twin-Turbo V6","4.0L VQ40DE V6","5.6L Endurance V8 Titan","Leaf Electric"]
-  },
-  "Opel / Vauxhall": {
-    models: ["Adam","Agila","Astra","Cascada","Corsa","Crossland","Grandland","Insignia","Meriva","Mokka","Omega","Vectra","Zafira"],
-    engines: ["1.0L Turbo","1.2L Turbo","1.2L FlexFuel","1.4L Turbo","1.5L Diesel","1.6L Turbo","1.6L CDTI Diesel","2.0L Turbo","2.0L CDTI Diesel","2.8L Turbo OPC"]
-  },
-  "Peugeot": {
-    models: ["107","108","2008","207","208","3008","301","307","308","4008","408","5008","508","Boxer","Expert","Partner","Rifter"],
-    engines: ["1.0L PureTech","1.1L TU1","1.2L PureTech Turbo","1.4L TU3","1.5L BlueHDi Diesel","1.6L THP Turbo","1.6L HDi Diesel","2.0L BlueHDi Diesel","2.2L HDi Diesel","308 GTi 1.6L Turbo"]
-  },
-  "Porsche": {
-    models: ["718 Boxster","718 Cayman","911","Cayenne","Macan","Panamera","Taycan"],
-    engines: ["2.0L Flat-4 Turbo","2.5L Flat-4 Turbo S","2.9L Bi-Turbo V6","3.0L Flat-6 Turbo","3.0L Bi-Turbo V6","3.8L Flat-6 Turbo","4.0L Flat-6 GT3","4.0L Flat-6 Turbo S","4.8L Turbo S V8","Taycan Electric","Cayenne 4.0L Twin-Turbo V8"]
-  },
-  "RAM": {
-    models: ["1500","2500","3500","ProMaster"],
-    engines: ["3.0L EcoDiesel V6","3.6L Pentastar V6","3.6L eTorque Hybrid","4.7L V8","5.7L HEMI V8","6.2L Supercharged HEMI V8","6.4L HEMI V8","6.7L Cummins Diesel Inline-6"]
-  },
-  "Renault": {
-    models: ["Arkana","Captur","Clio","Duster","Fluence","Kadjar","Koleos","Kwid","Laguna","Megane","Sandero","Scenic","Trafic","Triber","Zoe"],
-    engines: ["0.9L TCe Turbo","1.0L SCe","1.0L TCe","1.2L TCe Turbo","1.3L TCe Turbo","1.4L TCe Turbo","1.5L dCi Diesel","1.6L","1.6L dCi Diesel","1.8L RS Turbo","2.0L dCi Diesel","Megane RS 1.8L Turbo","Zoe Electric"]
-  },
-  "Rolls-Royce": {
-    models: ["Cullinan","Dawn","Ghost","Phantom","Silver Shadow","Spectre","Wraith"],
-    engines: ["6.75L V12 Twin-Turbo","Spectre Electric Dual Motor"]
-  },
-  "SEAT": {
-    models: ["Arona","Ateca","Ibiza","Leon","Mii","Tarraco"],
-    engines: ["1.0L TSI","1.5L TSI EVO","1.6L TDI Diesel","2.0L TDI Diesel","2.0L TSI Cupra"]
-  },
-  "Skoda": {
-    models: ["Enyaq","Fabia","Karoq","Kodiaq","Octavia","Rapid","Roomster","Scala","Superb","Yeti"],
-    engines: ["1.0L TSI","1.2L TSI","1.4L TSI","1.5L TSI","1.6L MPI","1.6L TDI Diesel","2.0L TSI","2.0L TDI Diesel","3.6L V6 FSI"]
-  },
-  "Subaru": {
-    models: ["Ascent","BRZ","Crosstrek","Forester","Impreza","Legacy","Levorg","Outback","Solterra","WRX","XV"],
-    engines: ["1.6L Boxer","2.0L Boxer","2.0L EE20 Boxer Diesel","2.0L Turbo EJ20","2.4L Turbo EJ257","2.5L Boxer","2.5L Turbo EJ255","STI 2.5L Turbo EJ257","Solterra Electric"]
-  },
-  "Suzuki": {
-    models: ["Alto","Baleno","Celerio","Ciaz","Dzire","Ertiga","Grand Vitara","Ignis","Jimny","Kizashi","S-Cross","Swift","Swace","SX4","Vitara","Wagon R","XL6"],
-    engines: ["0.66L K6A","0.66L R06A Turbo","1.0L Boosterjet","1.2L Dualjet","1.2L K12M","1.3L DDiS Diesel","1.3L G13BB","1.4L Boosterjet","1.4L DDiS Diesel","1.5L VVT","1.5L Mild Hybrid","1.6L M16A","1.9L DDiS Diesel","2.4L J24B"]
-  },
-  "Tesla": {
-    models: ["Model 3","Model S","Model X","Model Y","Cybertruck","Roadster"],
-    engines: ["Rear-Wheel Drive Electric","Long Range Dual Motor Electric","Performance Dual Motor Electric","Plaid Tri Motor Electric"]
-  },
-  "Toyota": {
-    models: ["4Runner","86/GR86","Alphard","Aqua","Avanza","Avensis","Aygo","C-HR","Camry","Corolla","Corolla Cross","Crown","FJ Cruiser","Fortuner","GR Supra","Granvia","Hiace","Highlander","Hilux","Innova","Land Cruiser","Land Cruiser Prado","Mirai","Noah","Prius","ProAce","Probox","RAV4","Rush","Sequoia","Sienta","Tacoma","Tundra","Venza","Vios","Voxy","Yaris","Yaris Cross"],
-    engines: ["1NR-FE 1.3L","1KR-FE 1.0L","1NZ-FE 1.5L","2NZ-FE 1.3L","1ZR-FE 1.6L","2ZR-FE 1.8L","2ZR-FXE 1.8L Hybrid","M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid","A25A-FKS 2.5L","2AR-FE 2.5L","2GR-FE 3.5L V6","2GR-FKS 3.5L V6","3GR-FE 3.0L V6","1GD-FTV 2.8L Diesel","2GD-FTV 2.4L Diesel","1KD-FTV 3.0L Diesel","2TR-FE 2.7L Petrol","1UR-FE 4.6L V8","2UZ-FE 4.7L V8","3UR-FBE 5.7L V8","GR 3.0L B58 Turbo","G16E-GTS 1.6L Turbo","Mirai Hydrogen FCEV"]
-  },
-  "Volkswagen": {
-    models: ["Amarok","Arteon","Atlas","Caddy","California","Caravelle","Crafter","Fox","Golf","Golf GTI","Golf R","ID.3","ID.4","ID.6","Jetta","Multivan","Passat","Polo","Scirocco","T-Cross","T-Roc","Taos","Tiguan","Touareg","Touran","Transporter","up!","Virtus"],
-    engines: ["1.0L MPI","1.0L TSI","1.2L TSI","1.4L TSI","1.5L TSI EVO","1.6L MPI","1.6L TDI Diesel","2.0L TSI GTI","2.0L TSI R","2.0L TDI Diesel","2.0L Bi-Turbo TDI","3.0L TDI V6","3.6L VR6","4.0L Bi-Turbo V8 TDI","ID.3 Electric","ID.4 Electric"]
-  },
-  "Volvo": {
-    models: ["C30","C40","EX30","EX40","S40","S60","S80","S90","V40","V60","V70","V90","XC40","XC60","XC70","XC90"],
-    engines: ["1.5L T3","2.0L T4","2.0L T5","2.0L T6 Twin Engine PHEV","2.0L T8 Twin Engine PHEV","2.0L D3 Diesel","2.0L D4 Diesel","2.0L D5 PowerPulse Diesel","2.4L D5 Diesel","3.0L T6 Turbo","Polestar 2.0L Optimised","C40 / EX40 Electric"]
-  },
-  "Zastava / Yugo": {
-    models: ["101","128","Jugo 45","Koral","Rival"],
-    engines: ["0.9L","1.1L","1.3L","1.4L Diesel"]
-  },
-  "ZAZ": {
-    models: ["Chance","Forza","Lanos","Sens","Slavuta"],
-    engines: ["1.2L","1.4L","1.5L","1.6L"]
-  }
-};
-
-// Additional makes with models/engines
-const EXTRA = {
-  "Abarth":{ models:["124 Spider","500","595","695","Punto Evo"], engines:["1.4L Turbo Abarth","1.8L Turbo TB"] },
-  "AC Cars":{ models:["Ace","Cobra","Aceca"], engines:["4.7L V8","5.0L V8","6.3L V8"] },
-  "Alpina":{ models:["B3","B4","B5","B6","B7","B8","D3","D4","D5","XB7"], engines:["3.0L Biturbo","4.4L V8 Biturbo","4.0L V8 Biturbo"] },
-  "Alpine":{ models:["A110","A310","A610","A110 R"], engines:["1.8L Turbo 4-Cylinder"] },
-  "Ariel":{ models:["Atom","Nomad"], engines:["2.0L Supercharged Honda K20","2.0L Honda K20"] },
-  "Aro":{ models:["10","24"], engines:["1.4L","1.6L Diesel","2.5L Diesel"] },
-  "Artega":{ models:["GT","SE"], engines:["3.6L V6 VR6"] },
-  "Aspark":{ models:["Owl"], engines:["Electric Quad Motor"] },
-  "Austin":{ models:["Metro","Mini","Maxi","Allegro","Princess"], engines:["0.85L A-Series","1.0L","1.1L","1.3L"] },
-  "BAC":{ models:["Mono","Mono R"], engines:["2.3L Ford EcoBoost Turbo"] },
-  "Baic":{ models:["BJ40","BJ80","EU5","X3","X55"], engines:["1.5L Turbo","2.3L Turbo","2.0L Diesel","Electric"] },
-  "Bajaj":{ models:["Qute"], engines:["0.216L 2-Cylinder Diesel"] },
-  "Baw":{ models:["Yutu Plus"], engines:["1.5L","2.4L Diesel"] },
-  "Baojun":{ models:["510","560","630","730","RS-3","RS-5"], engines:["1.5L","1.5L Turbo"] },
-  "Beijing":{ models:["BJ80","BJ40 Plus"], engines:["2.3L Turbo","2.0L Diesel"] },
-  "Bolloré":{ models:["Bluecar"], engines:["Electric"] },
-  "Borgward":{ models:["BX3","BX5","BX7"], engines:["1.4L Turbo","1.8L Turbo","2.0L Turbo"] },
-  "Brilliance":{ models:["H230","H320","H330","V5"], engines:["1.3L","1.5L","1.6L","1.8L Turbo"] },
-  "Bristol":{ models:["407","408","409","411","603"], engines:["3.4L V8","5.2L V8 Chrysler"] },
-  "Bufori":{ models:["Geneva","La Joya"], engines:["3.6L V6"] },
-  "Callaway":{ models:["Camaro SC652","Silverado"], engines:["Supercharged V8"] },
-  "Carbodies":{ models:["FX4","Fairway"], engines:["2.7L Diesel"] },
-  "Casalini":{ models:["M10","M20","Ydea"], engines:["0.5L Diesel","Electric"] },
-  "Caterham":{ models:["Seven 160","Seven 270","Seven 310","Seven 420","Seven 620"], engines:["0.66L Turbo","1.4L Sigma","2.0L Duratec"] },
-  "CFMOTO":{ models:["Zforce","Uforce"], engines:["0.8L V-Twin","0.96L"] },
-  "Changan":{ models:["CS15","CS35","CS55","CS75","CS85","Eado","Uni-K","Uni-T","Uni-V"], engines:["1.4L Turbo","1.5L Turbo","2.0L Turbo"] },
-  "Chery":{ models:["Arrizo 5","Arrizo 6","Tiggo 3","Tiggo 4","Tiggo 5X","Tiggo 7","Tiggo 8"], engines:["1.5L Turbo","1.6L","2.0L Turbo"] },
-  "Chevron":{ models:["B16","B19","B23"], engines:["1.6L FVC","2.0L BDA"] },
-  "Chrysler":{ models:["300","Grand Voyager","Pacifica","Voyager"], engines:["2.4L","3.5L V6","3.6L Pentastar V6","5.7L HEMI V8"] },
-  "Ciimo":{ models:["C5","CS5"], engines:["1.5L","1.8L"] },
-  "Cizeta-Moroder":{ models:["V16T"], engines:["6.0L V16"] },
-  "Cosworth":{ models:["CA2010"], engines:["2.4L V8 Formula 1"] },
-  "Datsun":{ models:["Go","Go+","mi-DO","on-DO","redi-GO"], engines:["0.8L","1.0L","1.2L Turbo","1.4L"] },
-  "De Tomaso":{ models:["Pantera","Mangusta","P72"], engines:["5.7L Ford V8","2.0L Turbo"] },
-  "DFSK":{ models:["Glory 330","Glory 500","Glory 580","Glory 580 Pro"], engines:["1.5L Turbo","1.8L Turbo"] },
-  "DKW":{ models:["3=6","Munga","F89"], engines:["0.9L 2-Stroke","1.0L 2-Stroke"] },
-  "Donkervoort":{ models:["D8","D8 GTO"], engines:["1.8L TFSI Audi Turbo","2.5L TFSI RS Turbo"] },
-  "Dongfeng":{ models:["AX4","AX7","Fengon 500","H30 Cross","S560"], engines:["1.4L Turbo","1.5L Turbo","2.0L Turbo","2.0L Diesel"] },
-  "Eagle":{ models:["Talon","Vision","Summit"], engines:["1.8L","2.0L","2.0L Turbo"] },
-  "Elba":{ models:["Marengo","Casablanca"], engines:["1.3L","1.6L"] },
-  "Elfin":{ models:["Clubman","MS8 Streamliner"], engines:["2.0L Duratec","3.0L Ford V6"] },
-  "ERA Replica":{ models:["289 Cobra","427 Cobra"], engines:["5.0L Coyote V8","6.2L V8"] },
-  "Eunos":{ models:["Roadster","Cosmo","500"], engines:["1.6L DOHC","1.8L","2.0L Turbo"] },
-  "Exeed":{ models:["TXL","VX","LX"], engines:["1.5L Turbo","2.0L Turbo"] },
-  "Falcon":{ models:["F7"], engines:["7.0L LS7 V8"] },
-  "FAW":{ models:["Bestune B70","Bestune T77","Bestune T99","Hongqi H5","Hongqi H9","Jiefang","Senya S80"], engines:["1.5L Turbo","2.0L Turbo","3.0L V6"] },
-  "Fisker":{ models:["Karma","Ocean"], engines:["2.0L PHEV","Electric"] },
-  "Force":{ models:["Gurkha","Trax"], engines:["2.6L Diesel","2.2L Diesel"] },
-  "Foton":{ models:["Sauvana","Thunder","Tunland"], engines:["2.0L Diesel","2.4L Diesel","2.8L Diesel"] },
-  "GAC":{ models:["Aion S","Aion V","Aion Y","GS4","GS5","GS8","GM6","GM8"], engines:["1.5L Turbo","2.0L Turbo","Electric"] },
-  "Gaz":{ models:["Volga","Gazelle","Sobol"], engines:["1.8L","2.3L","2.4L","2.5L Diesel"] },
-  "GEM":{ models:["e2","e4","e6","eS"], engines:["Electric"] },
-  "Ginetta":{ models:["G40","G55","G57","G60"], engines:["1.8L VVC","2.0L EcoBoost","3.7L V6"] },
-  "GMAC":{ models:["Envoy","Jimmy"], engines:["4.2L Inline-6","4.3L V6","5.3L V8"] },
-  "GWM":{ models:["P-Series","Tank 300","Tank 500","Ute"], engines:["2.0L Turbo Diesel","2.0L Turbo Petrol","3.0L Twin-Turbo V6"] },
-  "Hennessey":{ models:["Venom F5","Venom GT"], engines:["6.6L Twin-Turbo V8"] },
-  "Hispano-Suiza":{ models:["Carmen"], engines:["Electric Quad Motor"] },
+  "Acura":{ models:["ILX","Integra","MDX","NSX","RDX","RLX","TL","TLX","TSX","ZDX"], engines:["1.5L Turbo","2.0L Turbo","2.4L VTEC","3.0L V6","3.2L V6","3.5L V6","3.7L V6","Sport Hybrid SH-AWD"] },
+  "Alfa Romeo":{ models:["147","156","159","166","4C","Brera","Giulia","Giulietta","GTV","MiTo","Spider","Stelvio","Tonale"], engines:["1.4L Turbo","1.6L JTDm Diesel","1.7L TBi","1.8L TB","2.0L Turbo","2.2L JTDm Diesel","2.4L JTDm Diesel","2.9L Bi-Turbo V6","3.0L V6 Turbo","Quadrifoglio 2.9L Twin-Turbo"] },
+  "Aston Martin":{ models:["DB7","DB9","DB11","DBS","DBX","Rapide","Vantage","Virage","Vulcan"], engines:["4.0L Twin-Turbo V8","5.2L Twin-Turbo V12","6.0L V12","6.3L AMR V8","AMG 4.0L V8"] },
+  "Audi":{ models:["A1","A2","A3","A4","A5","A6","A7","A8","Q2","Q3","Q4 e-tron","Q5","Q7","Q8","R8","RS3","RS4","RS5","RS6","RS7","RS Q8","S3","S4","S5","S6","S7","S8","SQ5","SQ7","SQ8","TT","TTS"], engines:["1.0L TFSI","1.2L TFSI","1.4L TFSI","1.5L TFSI","1.6L TDI","1.8L TFSI","2.0L TFSI","2.0L TDI","2.5L TFSI RS","2.9L Bi-Turbo V6 TFSI","3.0L TFSI","3.0L TDI","4.0L TDI V8","4.0L TFSI V8","5.2L FSI V10"] },
+  "BMW":{ models:["1 Series","2 Series","3 Series","4 Series","5 Series","6 Series","7 Series","8 Series","i3","i4","i5","i7","iX","M2","M3","M4","M5","M6","M8","X1","X2","X3","X3M","X4","X4M","X5","X5M","X6","X6M","X7","Z3","Z4"], engines:["1.5L Turbo 3-Cylinder","2.0L TwinPower Turbo","2.0L Diesel TwinPower","2.5L Inline-6","3.0L TwinPower Turbo Inline-6","3.0L Diesel TwinPower","4.4L V8 TwinPower Turbo","4.4L M V8","5.0L V10 (M5/M6)","6.6L V12"] },
+  "Chevrolet":{ models:["Aveo","Blazer","Camaro","Colorado","Corvette","Cruze","Equinox","Express","Impala","Malibu","Orlando","Silverado 1500","Silverado 2500HD","Spark","Suburban","Tahoe","Tracker","Trailblazer","Traverse","Trax"], engines:["1.0L Turbo","1.2L Turbo","1.3L Turbo","1.4L Turbo","1.5L Turbo","1.6L Diesel","2.0L Turbo","2.5L","2.7L Turbo","3.0L Duramax Diesel","3.5L V6","3.6L V6","4.3L V6","5.3L EcoTec3 V8","6.2L EcoTec3 V8","6.6L Duramax Diesel","LT4 6.2L Supercharged V8","LT2 6.2L V8"] },
+  "Ford":{ models:["B-Max","C-Max","EcoSport","Edge","Endura","Escape","Everest","Explorer","F-150","F-250","F-350","Fiesta","Focus","Fusion","Galaxy","Ka","Kuga","Maverick","Mondeo","Mustang","Mustang Mach-E","Puma","Ranger","S-Max","Territory","Transit","Transit Connect"], engines:["1.0L EcoBoost","1.1L Ti-VCT","1.3L EcoBoost","1.4L TDCi Diesel","1.5L EcoBoost","1.5L EcoBlue Diesel","1.5L Ti-VCT","1.6L EcoBoost","1.6L TDCi Diesel","2.0L EcoBoost","2.0L EcoBlue Diesel","2.0L Bi-Turbo Diesel","2.3L EcoBoost","2.5L Duratec","2.5L PHEV","2.7L EcoBoost V6","3.0L EcoBoost V6","3.5L EcoBoost V6","3.5L TiVCT V6","5.0L Coyote V8","5.0L Dragon V8","5.2L Voodoo V8 GT350","7.3L Godzilla V8"] },
   "Honda":{ models:["Accord","Amaze","BR-V","City","Civic","CR-V","CR-Z","Element","Fit","FR-V","HR-V","Insight","Jazz","Legend","Odyssey","Passport","Pilot","Ridgeline","S2000","Shuttle","Stream","WR-V","ZR-V"], engines:["0.6L i-DSI","1.0L Turbo","1.2L i-VTEC","1.3L i-VTEC","1.4L i-DSI","1.5L VTEC Turbo","1.5L i-VTEC","1.5L Hybrid","1.6L i-DTEC Diesel","1.7L i-VTEC","1.8L i-VTEC","2.0L i-VTEC","2.0L Turbo","2.0L DOHC","2.2L i-DTEC Diesel","2.4L K24 i-VTEC","3.0L V6","3.5L V6","3.5L VTEC V6"] },
-  "Hongqi":{ models:["E-HS3","E-HS9","H5","H7","H9","L5","LS7"], engines:["2.0L Turbo","3.0L V6 Twin-Turbo","Electric"] },
-  "Hummer":{ models:["H1","H2","H3","EV"], engines:["3.5L Turbo Diesel","6.0L V8","6.2L V8","Ultium EV Motors"] },
-  "Huyndai":{ models:["Kona N","i30 N","Veloster N"], engines:["2.0L T-GDI N Turbo"] },
-  "Icon":{ models:["Reformer","FJ"], engines:["5.3L LS V8","6.2L LS3 V8"] },
-  "IFR":{ models:["Aspid"], engines:["2.0L Turbo"] },
-  "INEOS":{ models:["Grenadier"], engines:["3.0L BMW B57 Diesel","3.0L BMW B58 Petrol"] },
-  "Iso Rivolta":{ models:["Isetta","Grifo","Rivolta","Lele"], engines:["0.25L BMW 2-Stroke","5.4L Corvette V8"] },
-  "Lada":{ models:["Kalina","Largus","Niva","Priora","Vesta","XRAY","2105","2107"], engines:["1.4L","1.6L","1.7L","1.8L VAZ","2.0L"] },
-  "Lamborghini":{ models:["Aventador","Gallardo","Huracán","Urus"], engines:["4.0L Twin-Turbo V8","5.2L Naturally Aspirated V10","6.5L Naturally Aspirated V12"] },
-  "LiXiang / Li Auto":{ models:["L7","L8","L9","One"], engines:["1.2L Range Extender PHEV","Electric"] },
-  "Lightyear":{ models:["0","2"], engines:["Solar Electric"] },
-  "Lincoln":{ models:["Aviator","Corsair","MKC","MKT","MKX","MKZ","Navigator"], engines:["2.0L EcoBoost","2.3L EcoBoost","2.7L EcoBoost V6","3.0L Twin-Turbo V6","3.5L EcoBoost V6","5.4L V8"] },
-  "Lordstown":{ models:["Endurance"], engines:["Electric Hub Motors"] },
-  "Lucid":{ models:["Air","Gravity"], engines:["Electric Dual Motor","Electric Tri Motor"] },
-  "Lynk & Co":{ models:["01","02","03","05","06","09"], engines:["1.5L Turbo","2.0L Turbo","PHEV 2.0L"] },
-  "Maruti Suzuki":{ models:["Alto","Baleno","Brezza","Celerio","Ciaz","Dzire","Ertiga","Fronx","Ignis","Jimny","S-Presso","Swift","WagonR","XL6"], engines:["0.8L F8D","1.0L K10C","1.2L K12","1.2L DualJet","1.3L Multijet Diesel","1.4L DDiS Diesel","1.5L K15C","1.5L Diesel"] },
-  "Maybach":{ models:["57","62","GLS 600","S 580","S 680"], engines:["5.5L V12 Biturbo","6.0L V12","6.0L Biturbo V12","4.0L V8 MHEV"] },
-  "Maxus":{ models:["D60","D90","T60","T70","G10","G50"], engines:["1.5L Turbo","2.0L Turbo Diesel","2.8L Turbo Diesel"] },
-  "Mga":{ models:["MGA 1500","MGA 1600","Twin Cam"], engines:["1.5L B-Series","1.6L B-Series Twin Cam"] },
-  "Microcar":{ models:["M8","M9","Due"], engines:["0.5L Kubota Diesel","Electric"] },
-  "Morgan":{ models:["3 Wheeler","Plus Four","Plus Six","Super 3"], engines:["2.0L BMW B48 Turbo","3.0L BMW B58 Turbo","1.5L Ford Inline-3"] },
-  "Morris":{ models:["Minor","Marina","Ital","Oxford"], engines:["0.85L A-Series","1.0L","1.3L","1.8L"] },
-  "NIO":{ models:["EC6","ES6","ES7","ES8","ET5","ET7","EL7"], engines:["Electric Dual Motor","Electric Tri Motor"] },
-  "Nissa":{ models:["NP200","NP300","Hardbody"], engines:["1.6L","2.0L","2.5L Diesel"] },
-  "NEVS":{ models:["9-3 Electric"], engines:["Electric"] },
-  "Oldsmobile":{ models:["Alero","Aurora","Bravada","Cutlass","Intrigue","Silhouette"], engines:["2.4L","3.4L V6","3.5L V6","4.0L Aurora V8"] },
-  "ORA":{ models:["Black Cat","Good Cat","Funky Cat"], engines:["Electric"] },
-  "Osca":{ models:["1100","1500","Maserati-based"], engines:["1.1L DOHC","1.5L"] },
-  "Pagani":{ models:["Huayra","Zonda"], engines:["5.9L AMG M120 V12","6.0L AMG Bi-Turbo V12"] },
-  "Patrol":{ models:["GR","Y61","Y62"], engines:["4.0L VQ40DE V6","4.5L TB45E","4.8L TB48DE","5.6L VK56VD V8","3.0L Diesel"] },
-  "Perodua":{ models:["Alza","Aruz","Ativa","Axia","Bezza","Myvi","Viva"], engines:["0.66L","0.99L","1.0L","1.2L","1.3L 4A90E","1.5L 3SZ-VE"] },
-  "Pininfarina":{ models:["Battista"], engines:["Electric Quad Motor"] },
-  "Plymouth":{ models:["Barracuda","Duster","Road Runner","Satellite","Fury"], engines:["2.5L Slant Six","3.2L V8","5.2L V8 LA","5.6L V8","6.3L V8","7.0L V8 426 HEMI"] },
-  "Pontiac":{ models:["Bonneville","Firebird","G6","G8","GTO","Solstice","Trans Am"], engines:["2.4L Ecotec","3.6L V6","3.9L V6","5.7L LS1 V8","6.0L LS2 V8","6.2L LS3 V8"] },
-  "Proton":{ models:["Ertiga","Exora","Iriz","Persona","Saga","Suprima S","X50","X70"], engines:["1.3L CFE Turbo","1.5L TGDi Turbo","1.6L VVT","1.6L CPS"] },
-  "Radical":{ models:["SR3","SR8","SR10","RXC"], engines:["1.5L Turbocharged Hayabusa","2.8L Ford EcoBoost V6"] },
-  "Rimac":{ models:["Concept One","Nevera"], engines:["Electric Quad Motor"] },
-  "Rivian":{ models:["R1S","R1T"], engines:["Electric Quad Motor"] },
-  "Roewe":{ models:["350","360","550","750","D7","i5","i6","i7","RX5","RX8"], engines:["1.5L Turbo","1.8L Turbo","2.0L Turbo","Electric"] },
-  "Rover":{ models:["25","45","75","200","400","600","800","Metro","Mini"], engines:["1.1L K-Series","1.4L K-Series","1.6L K-Series","1.8L K-Series","1.8L T16 Turbo","2.0L CDT Diesel","2.5L KV6"] },
-  "Saab":{ models:["9-2X","9-3","9-4X","9-5","9-7X","9000"], engines:["1.8T","2.0T BioPower","2.3T","2.8 V6 Turbo","3.0L V6"] },
-  "Saturn":{ models:["Astra","Aura","Ion","Outlook","Sky","Vue"], engines:["1.8L","2.0L Turbo","2.4L Ecotec","3.0L V6","3.5L V6","3.6L V6"] },
-  "Scion":{ models:["FR-S","iM","iQ","tC","xA","xB","xD"], engines:["1.3L","1.5L","1.8L","2.0L Subaru Boxer FA20"] },
-  "Seat":{ models:["Arona","Ateca","Ibiza","Leon","Mii","Tarraco"], engines:["1.0L TSI","1.5L TSI EVO","1.6L TDI Diesel","2.0L TDI Diesel","2.0L TSI Cupra"] },
-  "Shelby":{ models:["Cobra","GT350","GT500","Series 1"], engines:["4.7L V8","5.2L Flat-Plane V8","5.4L Supercharged V8","5.8L Trinity V8","6.2L Predator V8"] },
-  "SsangYong / KGM":{ models:["Actyon","Korando","Musso","Rexton","Rodius","Tivoli","Torres","XLV"], engines:["1.2L Turbo","1.5L Turbo PHEV","1.6L Diesel e-XGi","2.0L e-XGi","2.0L Diesel XDi","2.2L Diesel XDi","2.7L Diesel XDi","2.9L Diesel"] },
-  "Studebaker":{ models:["Avanti","Hawk","Commander","Champion","Lark"], engines:["2.8L V8","4.2L V8","4.7L V8 Avanti R2 Turbo"] },
-  "Sunbeam":{ models:["Alpine","Rapier","Tiger"], engines:["1.3L","1.5L","1.6L","4.7L Ford V8 Tiger"] },
+  "Hyundai":{ models:["Accent","Azera","Bayon","Creta","Elantra","IONIQ","IONIQ 5","IONIQ 6","Kona","Nexo","Palisade","Santa Cruz","Santa Fe","Sonata","Staria","Terracan","Tucson","Veloster","Venue"], engines:["1.0L T-GDI Turbo","1.1L CRDi Diesel","1.2L MPI","1.4L T-GDI Turbo","1.4L CRDi Diesel","1.5L MPI","1.5L T-GDI Turbo","1.6L T-GDI Turbo","1.6L CRDi Diesel","1.8L MPI","2.0L MPI","2.0L T-GDI Turbo","2.2L CRDi Diesel","2.4L GDI","2.5L MPI","3.3L Twin-Turbo V6","3.5L V6 MPi","N 2.0L Turbo","Fuel Cell Electric"] },
+  "Kia":{ models:["Carnival","Ceed","Cerato","EV6","EV9","Mohave","Niro","Picanto","ProCeed","Rio","Seltos","Sonet","Sorento","Soul","Sportage","Stinger","Stonic","Telluride","XCeed"], engines:["1.0L T-GDI Turbo","1.2L MPI","1.4L T-GDI Turbo","1.4L CRDi Diesel","1.5L MPI","1.5L T-GDI Turbo","1.6L T-GDI Turbo","1.6L CRDi Diesel","2.0L MPi","2.0L T-GDI Turbo","2.2L CRDi Diesel","2.5L MPI","3.3L Twin-Turbo V6","3.5L V6","3.8L V6","5.0L V8"] },
+  "Mazda":{ models:["2","3","6","CX-3","CX-30","CX-5","CX-50","CX-60","CX-8","CX-90","MX-5 Miata","MX-30"], engines:["1.3L","1.5L SkyActiv-G","1.5L SkyActiv-D Diesel","1.5L SkyActiv-X","1.8L SkyActiv-D Diesel","2.0L SkyActiv-G","2.0L SkyActiv-X","2.2L SkyActiv-D Diesel","2.5L SkyActiv-G","2.5L SkyActiv-G Turbo","3.3L SkyActiv-G Turbo Inline-6","3.3L SkyActiv-D Diesel Inline-6","Electric MX-30"] },
+  "Mercedes-Benz":{ models:["A-Class","AMG GT","B-Class","C-Class","CLA","CLE","CLK","CLS","E-Class","EQA","EQB","EQC","EQE","EQS","G-Class","GLA","GLB","GLC","GLE","GLS","S-Class","SL","SLC","Sprinter","V-Class","Vito"], engines:["1.3L Turbo","1.5L Diesel","1.6L Turbo","2.0L Turbo M260","2.0L Turbo M264","2.0L Diesel OM654","3.0L Inline-6 Turbo M256","3.0L Diesel Inline-6","4.0L AMG V8 Biturbo","4.0L AMG GT V8","5.5L AMG V8","6.0L AMG V12 Biturbo","Electric EQ"] },
+  "Mitsubishi":{ models:["ASX","Colt","Eclipse Cross","Galant","L200 Triton","Lancer","Mirage","Montero Sport","Outlander","Pajero","Pajero Sport","RVR","Space Star","Xpander"], engines:["1.0L MIVEC","1.2L MIVEC","1.2L Turbo","1.5L MIVEC","1.8L PHEV","2.0L MIVEC","2.0L PHEV","2.2L DI-D Diesel","2.3L Turbo Diesel","2.4L MIVEC","2.5L MIVEC Diesel","3.0L V6","3.2L DI-D Diesel","3.5L V6"] },
+  "Nissan":{ models:["370Z","400Z","Almera","Armada","Frontier","GT-R","Juke","Kicks","Leaf","Magnite","Maxima","Micra","Murano","Navara","Note","NP200","NP300 Hardbody","Pathfinder","Patrol","Qashqai","Rogue","Sentra","Terra","Tiida","Titan","Versa","X-Trail"], engines:["1.0L DIG-T Turbo","1.0L HR10DE","1.2L HR12DE","1.5L HR15DE","1.6L DIG-T","1.6L dCi Diesel","1.8L MR18DE","2.0L MR20DE","2.0L VC-Turbo","2.3L SD23 Diesel","2.5L QR25DE","2.5L YD25DDTi Diesel","3.0L V9X Diesel","3.5L VQ35DE V6","3.8L VR38DETT Twin-Turbo V6","4.0L VQ40DE V6","5.6L Endurance V8 Titan","Leaf Electric"] },
+  "Peugeot":{ models:["107","108","2008","207","208","3008","301","307","308","4008","408","5008","508","Boxer","Expert","Partner","Rifter"], engines:["1.0L PureTech","1.1L TU1","1.2L PureTech Turbo","1.4L TU3","1.5L BlueHDi Diesel","1.6L THP Turbo","1.6L HDi Diesel","2.0L BlueHDi Diesel","2.2L HDi Diesel","308 GTi 1.6L Turbo"] },
+  "Renault":{ models:["Arkana","Captur","Clio","Duster","Fluence","Kadjar","Koleos","Kwid","Laguna","Megane","Sandero","Scenic","Trafic","Triber","Zoe"], engines:["0.9L TCe Turbo","1.0L SCe","1.0L TCe","1.2L TCe Turbo","1.3L TCe Turbo","1.4L TCe Turbo","1.5L dCi Diesel","1.6L","1.6L dCi Diesel","1.8L RS Turbo","2.0L dCi Diesel","Megane RS 1.8L Turbo","Zoe Electric"] },
+  "Subaru":{ models:["Ascent","BRZ","Crosstrek","Forester","Impreza","Legacy","Levorg","Outback","Solterra","WRX","XV"], engines:["1.6L Boxer","2.0L Boxer","2.0L EE20 Boxer Diesel","2.0L Turbo EJ20","2.4L Turbo EJ257","2.5L Boxer","2.5L Turbo EJ255","STI 2.5L Turbo EJ257","Solterra Electric"] },
   "Suzuki":{ models:["Alto","Baleno","Celerio","Ciaz","Dzire","Ertiga","Grand Vitara","Ignis","Jimny","Kizashi","S-Cross","Swift","Swace","SX4","Vitara","Wagon R","XL6"], engines:["0.66L K6A","0.66L R06A Turbo","1.0L Boosterjet","1.2L Dualjet","1.2L K12M","1.3L DDiS Diesel","1.3L G13BB","1.4L Boosterjet","1.4L DDiS Diesel","1.5L VVT","1.5L Mild Hybrid","1.6L M16A","1.9L DDiS Diesel","2.4L J24B"] },
-  "Tata":{ models:["Altroz","Harrier","Indica","Indigo","Nano","Nexon","Punch","Safari","Sierra","Sumo","Tiago","Tigor","Xenon"], engines:["0.6L Nano Petrol","1.0L Revotron Turbo","1.2L Revotron","1.5L Diesel Revotorq","1.7L Diesel","2.0L Multijet Diesel","2.2L Dicor Diesel","3.0L Diesel"] },
-  "TVR":{ models:["Cerbera","Chimaera","Griffith","Sagaris","Tamora","T350","Tuscan"], engines:["3.6L AJP V8","4.0L Ford V8","4.2L AJP V8","4.5L AJP V8","6.0L TVR Speed Six"] },
-  "UAZ":{ models:["Patriot","Hunter","Pickup","Buhanka"], engines:["2.7L ZMZ","2.3L Diesel","3.0L ZMZ Pro"] },
-  "Vauxhall":{ models:["Adam","Agila","Astra","Cascada","Corsa","Crossland","Grandland","Insignia","Meriva","Mokka","Omega","Vectra","Zafira"], engines:["1.0L Turbo","1.2L Turbo","1.4L Turbo","1.5L Diesel","1.6L Turbo","1.6L CDTI Diesel","2.0L Turbo","2.0L CDTI Diesel"] },
-  "Vector":{ models:["W8","M12"], engines:["6.0L Twin-Turbo V8"] },
-  "Venturi":{ models:["400GT","Fetish"], engines:["3.0L Bi-Turbo","Electric"] },
-  "Vinfast":{ models:["VF3","VF5","VF6","VF7","VF8","VF9"], engines:["Electric","2.0L Turbo"] },
-  "Wartburg":{ models:["311","312","353","1.3"], engines:["0.99L 2-Stroke","1.3L Volkswagen"] },
-  "Westfield":{ models:["Sport Turbo","XI","XGTD"], engines:["1.4L Turbo","2.0L Duratec"] },
-  "Wiesmann":{ models:["GT MF4","GT MF5","Roadster MF3","MF4-CS"], engines:["3.0L BMW S54","4.0L BMW S65 V8","5.0L BMW S85 V10"] },
-  "Wuling":{ models:["Air EV","Almaz","Confero","Cortez","Formo","Hongguang Mini EV"], engines:["1.2L","1.5L","1.8L Turbo","Electric"] },
-  "Xpeng":{ models:["G3","G6","G9","P5","P7"], engines:["Electric Dual Motor","Electric Rear Motor"] },
-  "Zastava":{ models:["750","1100","Yugo 45","Koral","Florida","Skala"], engines:["0.75L","1.1L FIAT","1.3L FIAT","1.4L Diesel"] },
-  "Zeekr":{ models:["001","009","X"], engines:["Electric Dual Motor","Electric Rear Motor"] },
-  "Zotye":{ models:["T200","T300","T500","T600","SR7","SR9"], engines:["1.4L Turbo","1.5L Turbo","1.8L Turbo"] }
+  "Tesla":{ models:["Model 3","Model S","Model X","Model Y","Cybertruck","Roadster"], engines:["Rear-Wheel Drive Electric","Long Range Dual Motor Electric","Performance Dual Motor Electric","Plaid Tri Motor Electric"] },
+  "Toyota":{ models:["4Runner","86/GR86","Alphard","Aqua","Avanza","Avensis","Aygo","C-HR","Camry","Corolla","Corolla Cross","Crown","FJ Cruiser","Fortuner","GR Supra","Granvia","Hiace","Highlander","Hilux","Innova","Land Cruiser","Land Cruiser Prado","Mirai","Noah","Prius","ProAce","Probox","RAV4","Rush","Sequoia","Sienta","Tacoma","Tundra","Venza","Vios","Voxy","Yaris","Yaris Cross"], engines:["1NR-FE 1.3L","1KR-FE 1.0L","1NZ-FE 1.5L","2NZ-FE 1.3L","1ZR-FE 1.6L","2ZR-FE 1.8L","2ZR-FXE 1.8L Hybrid","M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid","A25A-FKS 2.5L","2AR-FE 2.5L","2GR-FE 3.5L V6","2GR-FKS 3.5L V6","3GR-FE 3.0L V6","1GD-FTV 2.8L Diesel","2GD-FTV 2.4L Diesel","1KD-FTV 3.0L Diesel","2TR-FE 2.7L Petrol","1UR-FE 4.6L V8","2UZ-FE 4.7L V8","3UR-FBE 5.7L V8","GR 3.0L B58 Turbo","G16E-GTS 1.6L Turbo","Mirai Hydrogen FCEV"] },
+  "Volkswagen":{ models:["Amarok","Arteon","Atlas","Caddy","California","Caravelle","Crafter","Fox","Golf","Golf GTI","Golf R","ID.3","ID.4","ID.6","Jetta","Multivan","Passat","Polo","Scirocco","T-Cross","T-Roc","Taos","Tiguan","Touareg","Touran","Transporter","up!","Virtus"], engines:["1.0L MPI","1.0L TSI","1.2L TSI","1.4L TSI","1.5L TSI EVO","1.6L MPI","1.6L TDI Diesel","2.0L TSI GTI","2.0L TSI R","2.0L TDI Diesel","2.0L Bi-Turbo TDI","3.0L TDI V6","3.6L VR6","4.0L Bi-Turbo V8 TDI","ID.3 Electric","ID.4 Electric"] },
+  "Volvo":{ models:["C30","C40","EX30","EX40","S40","S60","S80","S90","V40","V60","V70","V90","XC40","XC60","XC70","XC90"], engines:["1.5L T3","2.0L T4","2.0L T5","2.0L T6 Twin Engine PHEV","2.0L T8 Twin Engine PHEV","2.0L D3 Diesel","2.0L D4 Diesel","2.0L D5 PowerPulse Diesel","2.4L D5 Diesel","3.0L T6 Turbo","Polestar 2.0L Optimised","C40 / EX40 Electric"] },
 };
-
-// Merge EXTRA into WORLD_CARS (only add if not already there)
-Object.entries(EXTRA).forEach(([make, data]) => {
-  if (!WORLD_CARS[make]) WORLD_CARS[make] = data;
-});
 
 const ALL_MAKES = Object.keys(WORLD_CARS).sort();
 
-/* ════════════════════════════════════════════════════════════
-   FIREBASE SEED DATA
-   ════════════════════════════════════════════════════════════ */
 const DEFAULT_CAR_DB = {
   "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]},"Fortuner":{"2016-2023":["1GD-FTV 2.8L Diesel","2TR-FE 2.7L Petrol"]}},
   "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"]}},
@@ -544,9 +222,7 @@ const DEFAULT_SERVICE_CATALOG = {
   ]
 };
 
-/* ════════════════════════════════════════════════════════════
-   ICONS
-   ════════════════════════════════════════════════════════════ */
+/* ── Icons ── */
 const IWrench=()=><svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
 const IDash=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
 const ICar=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
@@ -563,13 +239,15 @@ const ISparkle=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" vi
 const IPlus=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14"/></svg>;
 const ISave=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>;
 const IChevDown=()=><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>;
+const ITag=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
+const IEdit=()=><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
 
 function DarkModePill({dark,onToggle}){
   return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
 }
 
 /* ════════════════════════════════════════════════════════════
-   SEARCHABLE DROPDOWN COMPONENT
+   SEARCHABLE DROPDOWN
    ════════════════════════════════════════════════════════════ */
 function SearchableDropdown({ label, value, onChange, options, placeholder, disabled }) {
   const [open, setOpen] = useState(false);
@@ -603,49 +281,25 @@ function SearchableDropdown({ label, value, onChange, options, placeholder, disa
     <div>
       {label && <label style={{fontSize:10,fontWeight:700,color:'var(--text3)',display:'block',marginBottom:6,letterSpacing:'0.5px'}}>{label}</label>}
       <div className="dd-wrap" ref={wrapRef}>
-        <button
-          type="button"
-          className="dd-input"
-          onClick={() => { if(!disabled) setOpen(o => !o); }}
-          style={{
-            opacity: disabled ? 0.45 : 1,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            textAlign: 'left',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-            color: value ? 'var(--text)' : 'var(--text3)'
-          }}
-        >
-          <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>
-            {value || placeholder}
-          </span>
-          <span className={`dd-arrow ${open?'open':''}`} style={{position:'static',transform:open?'rotate(180deg)':'none',flexShrink:0}}>
-            <IChevDown/>
-          </span>
+        <button type="button" className="dd-input" onClick={() => { if(!disabled) setOpen(o => !o); }}
+          style={{opacity:disabled?0.45:1,cursor:disabled?'not-allowed':'pointer',textAlign:'left',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,color:value?'var(--text)':'var(--text3)'}}>
+          <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>{value || placeholder}</span>
+          <span className={`dd-arrow ${open?'open':''}`} style={{position:'static',transform:open?'rotate(180deg)':'none',flexShrink:0}}><IChevDown/></span>
         </button>
-
         {open && (
           <div className="dd-list">
             {options.length > 8 && (
               <div className="dd-search">
-                <input
-                  ref={searchRef}
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
+                <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)}
                   placeholder={`Search ${label?.toLowerCase() || ''}…`}
-                  onKeyDown={e => { if(e.key==='Escape'){setOpen(false);setSearch('');} }}
-                />
+                  onKeyDown={e => { if(e.key==='Escape'){setOpen(false);setSearch('');} }}/>
               </div>
             )}
             {filtered.length === 0
               ? <div className="dd-empty">No results for "{search}"</div>
               : filtered.map(opt => (
-                  <div
-                    key={opt}
-                    className={`dd-item ${opt===value?'selected':''}`}
-                    onClick={() => select(opt)}
-                    title={opt}
-                  >{opt}</div>
-                ))
+                <div key={opt} className={`dd-item ${opt===value?'selected':''}`} onClick={() => select(opt)} title={opt}>{opt}</div>
+              ))
             }
           </div>
         )}
@@ -778,14 +432,235 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
 }
 
 /* ════════════════════════════════════════════════════════════
+   PARTS CATALOG VIEW
+   ════════════════════════════════════════════════════════════ */
+function PartsCatalogView({ partsCatalog }) {
+  const [localParts, setLocalParts] = useState({});
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(false);
+  const [editingKey, setEditingKey] = useState(null);
+  const [search, setSearch] = useState('');
+  const [newPartName, setNewPartName] = useState('');
+  const [addingPartTo, setAddingPartTo] = useState(null);
+
+  useEffect(() => {
+    if (partsCatalog && Object.keys(partsCatalog).length > 0) {
+      setLocalParts(JSON.parse(JSON.stringify(partsCatalog)));
+    } else {
+      setLocalParts(JSON.parse(JSON.stringify(DEFAULT_PARTS_CATALOG)));
+    }
+  }, [partsCatalog]);
+
+  const handlePriceChange = (key, val) => {
+    const n = parseInt(val, 10);
+    setLocalParts(prev => ({ ...prev, [key]: { ...prev[key], price: isNaN(n) ? 0 : n } }));
+    setDirty(true);
+  };
+
+  const handleAddPart = (key) => {
+    const name = newPartName.trim();
+    if (!name) return;
+    setLocalParts(prev => ({
+      ...prev,
+      [key]: { ...prev[key], parts: [...(prev[key].parts || []), name] }
+    }));
+    setNewPartName('');
+    setAddingPartTo(null);
+    setDirty(true);
+  };
+
+  const handleRemovePart = (key, idx) => {
+    setLocalParts(prev => ({
+      ...prev,
+      [key]: { ...prev[key], parts: prev[key].parts.filter((_, i) => i !== idx) }
+    }));
+    setDirty(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await db.ref('system/parts_catalog').set(localParts);
+      setDirty(false);
+      setToast(true);
+      setTimeout(() => setToast(false), 2800);
+    } catch (e) { alert(e.message); }
+    setSaving(false);
+  };
+
+  const filtered = useMemo(() => {
+    const entries = Object.entries(localParts);
+    if (!search.trim()) return entries;
+    const q = search.toLowerCase();
+    return entries.filter(([key, val]) =>
+      key.toLowerCase().includes(q) || (val.parts || []).some(p => p.toLowerCase().includes(q))
+    );
+  }, [localParts, search]);
+
+  const totalValue = useMemo(() => Object.values(localParts).reduce((s, v) => s + (v.price || 0), 0), [localParts]);
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:0}}>
+
+      {/* Toast */}
+      {toast && (
+        <div className="save-toast">
+          <ICheck/> Parts prices saved to Firebase!
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20,flexWrap:'wrap',gap:12}}>
+        <div>
+          <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Parts Catalog</h2>
+          <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>
+            Set base part prices for mechanics to use when building job quotes.
+          </p>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+          <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
+            {Object.keys(localParts).length} categories · R {totalValue.toLocaleString()} total
+          </div>
+          {dirty && (
+            <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
+              ● Unsaved changes
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Search */}
+      <div style={{position:'relative',marginBottom:20}}>
+        <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
+        <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
+          placeholder="Search parts or categories…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* Grid */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))',gap:14}}>
+        {filtered.map(([key, data]) => {
+          const isEditing = editingKey === key;
+          const isAddingHere = addingPartTo === key;
+          return (
+            <div key={key} className={`parts-card ${isEditing ? 'editing' : ''}`}>
+              {/* Card Header */}
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                <div className="parts-icon">{data.icon || '🔧'}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
+                  <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>{(data.parts||[]).length} part(s)</p>
+                </div>
+                <button
+                  onClick={() => { setEditingKey(isEditing ? null : key); setAddingPartTo(null); setNewPartName(''); }}
+                  style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,fontFamily:'Inter',transition:'all .15s',flexShrink:0}}
+                >
+                  <IEdit/> {isEditing ? 'Done' : 'Edit'}
+                </button>
+              </div>
+
+              {/* Price Input */}
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,padding:'10px 12px',borderRadius:12,background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.15)'}}>
+                <div>
+                  <p style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:'0 0 2px',letterSpacing:'0.5px'}}>BASE PRICE</p>
+                  <p style={{fontSize:9,color:'var(--text3)',margin:0}}>Mechanics see this price</p>
+                </div>
+                <div className="price-input-wrap">
+                  <span>R</span>
+                  <input
+                    type="number"
+                    value={data.price || 0}
+                    onChange={e => handlePriceChange(key, e.target.value)}
+                    min={0}
+                    step={10}
+                  />
+                </div>
+              </div>
+
+              {/* Parts List */}
+              <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                {(data.parts || []).map((part, idx) => (
+                  <div key={idx} className="part-item" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid var(--border2)'}}>
+                    <span className="part-dot"/>
+                    <span style={{flex:1,fontSize:12,color:'var(--text2)'}}>{part}</span>
+                    {isEditing && (
+                      <button
+                        onClick={() => handleRemovePart(key, idx)}
+                        style={{background:'rgba(255,80,80,0.08)',border:'1px solid rgba(255,80,80,0.2)',borderRadius:6,padding:'2px 7px',cursor:'pointer',color:'var(--red)',fontSize:11,fontWeight:700,fontFamily:'JetBrains Mono',flexShrink:0,lineHeight:1.4}}
+                      >×</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Add part inline */}
+              {isEditing && (
+                <div style={{marginTop:10}}>
+                  {isAddingHere ? (
+                    <div style={{display:'flex',gap:6,marginTop:6}}>
+                      <input
+                        className="field"
+                        style={{padding:'7px 12px',fontSize:12,flex:1}}
+                        placeholder="Part name…"
+                        value={newPartName}
+                        onChange={e => setNewPartName(e.target.value)}
+                        onKeyDown={e => { if(e.key==='Enter') handleAddPart(key); if(e.key==='Escape'){ setAddingPartTo(null); setNewPartName(''); } }}
+                        autoFocus
+                      />
+                      <button className="btn-p" style={{padding:'7px 14px',fontSize:12}} onClick={() => handleAddPart(key)}>Add</button>
+                      <button className="btn-g" style={{padding:'7px 10px',fontSize:12}} onClick={() => { setAddingPartTo(null); setNewPartName(''); }}>✕</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setAddingPartTo(key); setNewPartName(''); }}
+                      style={{width:'100%',marginTop:6,padding:'7px',borderRadius:10,border:'1px dashed var(--accent)',background:'rgba(77,123,255,0.04)',color:'var(--accent)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
+                    >
+                      <IPlus/> Add part
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={{textAlign:'center',padding:'60px 24px',color:'var(--text3)',fontSize:14}}>
+          No categories match "{search}"
+        </div>
+      )}
+
+      {/* Sticky Save Banner */}
+      <div className="parts-save-banner">
+        <div>
+          <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
+            {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
+          </p>
+          <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
+            Saved at: <span className="mono" style={{fontSize:11}}>system/parts_catalog</span>
+          </p>
+        </div>
+        <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
+          {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save All Prices</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════
    SYSTEM DATABASE VIEW
    ════════════════════════════════════════════════════════════ */
 function SystemDatabaseView({ systemData }){
   const [tab, setTab] = useState('vehicles');
   const carDB = systemData?.car_db || {};
   const services = systemData?.services || {};
+  const partsCatalog = systemData?.parts_catalog || {};
 
-  /* ── Make / Model browsing ── */
   const makes = useMemo(() => Object.keys(carDB).sort(), [carDB]);
   const [selectedMake, setSelectedMake] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
@@ -818,7 +693,6 @@ function SystemDatabaseView({ systemData }){
     return makes.filter(m => m.toLowerCase().includes(makeSearch.toLowerCase()));
   }, [makes, makeSearch]);
 
-  /* ── Add Vehicle Form ── */
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMake, setNewMake] = useState('');
   const [newModel, setNewModel] = useState('');
@@ -826,12 +700,10 @@ function SystemDatabaseView({ systemData }){
   const [newEngine, setNewEngine] = useState('');
   const [adding, setAdding] = useState(false);
 
-  // World car suggestions
   const worldModels = useMemo(() => {
     if (!newMake) return [];
     const w = WORLD_CARS[newMake];
     if (w) return w.models;
-    // partial match
     const match = Object.keys(WORLD_CARS).find(k => k.toLowerCase() === newMake.toLowerCase());
     return match ? WORLD_CARS[match].models : [];
   }, [newMake]);
@@ -844,17 +716,10 @@ function SystemDatabaseView({ systemData }){
     return match ? WORLD_CARS[match].engines : [];
   }, [newMake]);
 
-  const YEAR_SUGGESTIONS = [
-    '2022-2025','2020-2024','2019-2023','2018-2022','2017-2021',
-    '2016-2020','2015-2019','2014-2018','2012-2016','2010-2014',
-    '2008-2012','2005-2009','2000-2005','1995-2000','1990-1995'
-  ];
+  const YEAR_SUGGESTIONS = ['2022-2025','2020-2024','2019-2023','2018-2022','2017-2021','2016-2020','2015-2019','2014-2018','2012-2016','2010-2014','2008-2012','2005-2009','2000-2005','1995-2000','1990-1995'];
 
   const handleAddVehicle = async () => {
-    const make = newMake.trim();
-    const model = newModel.trim();
-    const year = newYear.trim();
-    const engine = newEngine.trim();
+    const make = newMake.trim(), model = newModel.trim(), year = newYear.trim(), engine = newEngine.trim();
     if(!make||!model||!year||!engine) return alert('Please fill all fields.');
     setAdding(true);
     try {
@@ -871,7 +736,6 @@ function SystemDatabaseView({ systemData }){
     setAdding(false);
   };
 
-  /* ── Pricing ── */
   const [localServices, setLocalServices] = useState(services);
   const [savingPrices, setSavingPrices] = useState(false);
   useEffect(() => { setLocalServices(services); }, [services]);
@@ -893,27 +757,23 @@ function SystemDatabaseView({ systemData }){
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       <div>
         <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>System Database</h2>
-        <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Manage vehicles and service pricing across the entire platform.</p>
+        <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Manage vehicles, service pricing, and parts catalog across the entire platform.</p>
       </div>
-      <div style={{display:'flex',gap:6,borderBottom:'1px solid var(--border)',paddingBottom:12}}>
+      <div style={{display:'flex',gap:6,borderBottom:'1px solid var(--border)',paddingBottom:12,flexWrap:'wrap'}}>
         <button className={`tab-btn ${tab==='vehicles'?'active':''}`} onClick={()=>setTab('vehicles')}>Vehicle Directory</button>
         <button className={`tab-btn ${tab==='pricing'?'active':''}`} onClick={()=>setTab('pricing')}>Services &amp; Pricing</button>
+        <button className={`tab-btn ${tab==='parts'?'active':''}`} onClick={()=>setTab('parts')} style={{display:'flex',alignItems:'center',gap:6}}>
+          <ITag/> Parts Catalog
+        </button>
       </div>
 
       {tab === 'vehicles' && (
         <div style={{display:'grid',gridTemplateColumns:'220px 1fr',gap:16,minHeight:520}}>
-          {/* Make sidebar */}
           <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,overflow:'hidden',display:'flex',flexDirection:'column'}}>
             <div style={{padding:'10px 12px',borderBottom:'1px solid var(--border)'}}>
               <div style={{position:'relative'}}>
                 <div style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
-                <input
-                  className="search-input"
-                  style={{paddingLeft:32,fontSize:12,padding:'7px 12px 7px 32px'}}
-                  placeholder={`Search ${makes.length} makes…`}
-                  value={makeSearch}
-                  onChange={e=>setMakeSearch(e.target.value)}
-                />
+                <input className="search-input" style={{paddingLeft:32,fontSize:12,padding:'7px 12px 7px 32px'}} placeholder={`Search ${makes.length} makes…`} value={makeSearch} onChange={e=>setMakeSearch(e.target.value)}/>
               </div>
             </div>
             <div style={{overflowY:'auto',flex:1}}>
@@ -928,8 +788,6 @@ function SystemDatabaseView({ systemData }){
               <p style={{fontSize:10,color:'var(--text3)',margin:0,textAlign:'center',fontFamily:'JetBrains Mono'}}>{makes.length} makes in DB</p>
             </div>
           </div>
-
-          {/* Right panel */}
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
               <div className="model-tabs-wrap" style={{flex:1}}>
@@ -938,89 +796,37 @@ function SystemDatabaseView({ systemData }){
                 ))}
                 {models.length===0 && <span style={{fontSize:13,color:'var(--text3)'}}>No models — select a make or add one.</span>}
               </div>
-              <button className="btn-p" onClick={()=>setShowAddForm(!showAddForm)} style={{padding:'7px 14px',fontSize:12,flexShrink:0}}>
-                <IPlus/> Add Vehicle
-              </button>
+              <button className="btn-p" onClick={()=>setShowAddForm(!showAddForm)} style={{padding:'7px 14px',fontSize:12,flexShrink:0}}><IPlus/> Add Vehicle</button>
             </div>
-
             <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,flex:1,overflow:'auto',padding:16,minHeight:420}}>
               {showAddForm ? (
-                /* ── ADD FORM ── */
                 <div className="anim-up">
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
                     <h3 style={{fontSize:15,fontWeight:800,color:'var(--text)',margin:0}}>Add New Vehicle</h3>
                     <button className="btn-g" style={{padding:'5px 12px',fontSize:12}} onClick={()=>{setShowAddForm(false);setNewMake('');setNewModel('');setNewYear('');setNewEngine('');}}>Cancel</button>
                   </div>
-                  <p style={{fontSize:12,color:'var(--text3)',margin:'0 0 16px'}}>
-                    Select from the global database of {ALL_MAKES.length}+ makes worldwide, or type a custom value.
-                  </p>
+                  <p style={{fontSize:12,color:'var(--text3)',margin:'0 0 16px'}}>Select from the global database of {ALL_MAKES.length}+ makes worldwide, or type a custom value.</p>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:18}}>
-
-                    <SearchableDropdown
-                      label="MAKE"
-                      value={newMake}
-                      onChange={v => { setNewMake(v); setNewModel(''); setNewEngine(''); }}
-                      options={ALL_MAKES}
-                      placeholder="Select make…"
-                    />
-
-                    <SearchableDropdown
-                      label="MODEL"
-                      value={newModel}
-                      onChange={v => { setNewModel(v); setNewEngine(''); }}
-                      options={worldModels}
-                      placeholder={newMake ? (worldModels.length > 0 ? 'Select model…' : 'Type custom model') : 'Select make first'}
-                      disabled={!newMake}
-                    />
-
-                    <SearchableDropdown
-                      label="YEAR RANGE"
-                      value={newYear}
-                      onChange={setNewYear}
-                      options={YEAR_SUGGESTIONS}
-                      placeholder="Select year range…"
-                    />
-
-                    <SearchableDropdown
-                      label="ENGINE"
-                      value={newEngine}
-                      onChange={setNewEngine}
-                      options={worldEngines}
-                      placeholder={newMake ? (worldEngines.length > 0 ? 'Select engine…' : 'Type custom engine') : 'Select make first'}
-                      disabled={!newMake}
-                    />
+                    <SearchableDropdown label="MAKE" value={newMake} onChange={v=>{setNewMake(v);setNewModel('');setNewEngine('');}} options={ALL_MAKES} placeholder="Select make…"/>
+                    <SearchableDropdown label="MODEL" value={newModel} onChange={v=>{setNewModel(v);setNewEngine('');}} options={worldModels} placeholder={newMake?(worldModels.length>0?'Select model…':'Type custom model'):'Select make first'} disabled={!newMake}/>
+                    <SearchableDropdown label="YEAR RANGE" value={newYear} onChange={setNewYear} options={YEAR_SUGGESTIONS} placeholder="Select year range…"/>
+                    <SearchableDropdown label="ENGINE" value={newEngine} onChange={setNewEngine} options={worldEngines} placeholder={newMake?(worldEngines.length>0?'Select engine…':'Type custom engine'):'Select make first'} disabled={!newMake}/>
                   </div>
-
-                  {/* Custom text overrides */}
                   <div style={{padding:'12px 14px',borderRadius:10,background:'rgba(77,123,255,0.05)',border:'1px solid rgba(77,123,255,0.15)',marginBottom:16}}>
                     <p style={{fontSize:10,fontWeight:700,color:'var(--accent)',margin:'0 0 8px',letterSpacing:'0.5px'}}>CUSTOM OVERRIDE (if not in list)</p>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                      <div>
-                        <label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Make</label>
-                        <input className="field" style={{padding:'8px 12px',fontSize:13}} value={newMake} onChange={e=>setNewMake(e.target.value)} placeholder="Type any make…"/>
-                      </div>
-                      <div>
-                        <label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Model</label>
-                        <input className="field" style={{padding:'8px 12px',fontSize:13}} value={newModel} onChange={e=>setNewModel(e.target.value)} placeholder="Type any model…"/>
-                      </div>
-                      <div>
-                        <label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Year Range</label>
-                        <input className="field" style={{padding:'8px 12px',fontSize:13}} value={newYear} onChange={e=>setNewYear(e.target.value)} placeholder="e.g. 2021-2024"/>
-                      </div>
-                      <div>
-                        <label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Engine</label>
-                        <input className="field" style={{padding:'8px 12px',fontSize:13}} value={newEngine} onChange={e=>setNewEngine(e.target.value)} placeholder="e.g. 2.0L Turbo"/>
-                      </div>
+                      <div><label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Make</label><input className="field" style={{padding:'8px 12px',fontSize:13}} value={newMake} onChange={e=>setNewMake(e.target.value)} placeholder="Type any make…"/></div>
+                      <div><label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Model</label><input className="field" style={{padding:'8px 12px',fontSize:13}} value={newModel} onChange={e=>setNewModel(e.target.value)} placeholder="Type any model…"/></div>
+                      <div><label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Year Range</label><input className="field" style={{padding:'8px 12px',fontSize:13}} value={newYear} onChange={e=>setNewYear(e.target.value)} placeholder="e.g. 2021-2024"/></div>
+                      <div><label style={{fontSize:10,color:'var(--text3)',fontWeight:600,display:'block',marginBottom:4}}>Custom Engine</label><input className="field" style={{padding:'8px 12px',fontSize:13}} value={newEngine} onChange={e=>setNewEngine(e.target.value)} placeholder="e.g. 2.0L Turbo"/></div>
                     </div>
                   </div>
-
                   {newMake && newModel && newYear && newEngine && (
                     <div className="anim-up" style={{padding:'10px 14px',borderRadius:10,background:'rgba(0,255,136,0.06)',border:'1px solid rgba(0,255,136,0.2)',marginBottom:16,fontSize:12,color:'var(--text2)'}}>
                       <span style={{color:'var(--green)',fontWeight:700}}>✓ Ready to save: </span>
                       {newMake} {newModel} ({newYear}) — <span className="mono" style={{fontSize:11}}>{newEngine}</span>
                     </div>
                   )}
-
                   <div style={{display:'flex',gap:10}}>
                     <button className="btn-p" onClick={handleAddVehicle} disabled={adding||!newMake||!newModel||!newYear||!newEngine}>
                       {adding?<ISpin cls="w-4 h-4"/>:<><ISave/> Save to Database</>}
@@ -1028,7 +834,6 @@ function SystemDatabaseView({ systemData }){
                   </div>
                 </div>
               ) : selectedModel ? (
-                /* ── DETAIL VIEW ── */
                 <>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
                     <div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,var(--accent),var(--accent2))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><ICar/></div>
@@ -1051,8 +856,7 @@ function SystemDatabaseView({ systemData }){
                 </>
               ) : (
                 <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:300,gap:12,color:'var(--text3)'}}>
-                  <ICar/>
-                  <p style={{fontSize:13,margin:0}}>Select a make on the left, then a model tab above.</p>
+                  <ICar/><p style={{fontSize:13,margin:0}}>Select a make on the left, then a model tab above.</p>
                 </div>
               )}
             </div>
@@ -1089,6 +893,12 @@ function SystemDatabaseView({ systemData }){
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {tab === 'parts' && (
+        <div className="anim-up">
+          <PartsCatalogView partsCatalog={partsCatalog}/>
         </div>
       )}
     </div>
@@ -1280,8 +1090,19 @@ function App(){
   useEffect(()=>{
     const sysRef=db.ref('system');
     const sysCb=sysRef.on('value',snap=>{
-      if(snap.exists())setSystemData(snap.val());
-      else{const seed={car_db:DEFAULT_CAR_DB,services:DEFAULT_SERVICE_CATALOG};sysRef.set(seed);setSystemData(seed);}
+      if(snap.exists()){
+        const val=snap.val();
+        // Seed parts_catalog if not present
+        if(!val.parts_catalog){
+          db.ref('system/parts_catalog').set(DEFAULT_PARTS_CATALOG);
+          val.parts_catalog=DEFAULT_PARTS_CATALOG;
+        }
+        setSystemData(val);
+      } else {
+        const seed={car_db:DEFAULT_CAR_DB,services:DEFAULT_SERVICE_CATALOG,parts_catalog:DEFAULT_PARTS_CATALOG};
+        sysRef.set(seed);
+        setSystemData(seed);
+      }
     });
     return()=>sysRef.off('value',sysCb);
   },[]);
