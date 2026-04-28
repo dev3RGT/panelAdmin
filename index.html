@@ -73,9 +73,62 @@
     .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);animation:overlayIn .2s ease forwards}
     .modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:201;background:var(--bg2);border:1px solid var(--border);border-radius:24px;width:min(92vw,680px);max-height:88vh;overflow-y:auto;padding:32px;box-shadow:var(--shadow-lg);animation:modalIn .3s cubic-bezier(.16,1,.3,1)}
     
-    /* DRAWER */
-    .drawer{position:fixed;top:0;right:0;height:100vh;width:340px;background:var(--bg2);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:202;padding:24px 16px;display:flex;flex-direction:column;animation:slideRight .3s cubic-bezier(.16,1,.3,1) forwards;transform:translateX(100%)}
-    .drawer.open{transform:translateX(0)}
+    /* ── HOVER DRAWER UPDATE ── */
+    .side-drawer {
+      position: sticky;
+      top: 0;
+      height: calc(100vh - 56px); /* account for main padding */
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      width: 56px;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s, border-color 0.35s;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+    .side-drawer:hover {
+      width: 340px;
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(77,123,255,0.4);
+    }
+    .side-drawer-content {
+      width: 340px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+    .side-drawer:hover .side-drawer-content {
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.3s ease 0.1s;
+    }
+    .side-drawer-collapsed {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      color: var(--text3);
+      transition: opacity 0.2s ease;
+    }
+    .side-drawer:hover .side-drawer-collapsed {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .side-drawer-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
     .master-cat-card{padding:12px;border-radius:12px;background:var(--input-bg);border:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:grab;transition:all .2s;user-select:none}
     .master-cat-card:active{cursor:grabbing;transform:scale(0.98)}
     .master-cat-card:hover{border-color:var(--accent);background:rgba(77,123,255,0.05)}
@@ -507,7 +560,7 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
 }
 
 /* ════════════════════════════════════════════════════════════
-   PARTS CATALOG VIEW (WITH DRAG & DROP DRAWER)
+   PARTS CATALOG VIEW (WITH HOVER SIDE DRAWER)
    ════════════════════════════════════════════════════════════ */
 function PartsCatalogView({ systemData, makes }) {
   const [selectedMake, setSelectedMake] = useState('default');
@@ -519,12 +572,10 @@ function PartsCatalogView({ systemData, makes }) {
   const [editingKey, setEditingKey] = useState(null);
   const [search, setSearch] = useState('');
   
-  // Drawer State
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Master Category Creation
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('🔧');
 
-  // Load master categories from Firebase or default
   useEffect(() => {
     if(systemData?.master_categories) {
        setMasterCategories(systemData.master_categories);
@@ -534,7 +585,6 @@ function PartsCatalogView({ systemData, makes }) {
     }
   }, [systemData]);
 
-  // Sync state when selectedMake changes
   useEffect(() => {
     if (selectedMake === 'default') {
       setLocalParts(JSON.parse(JSON.stringify(systemData?.parts_catalog || {})));
@@ -651,165 +701,172 @@ function PartsCatalogView({ systemData, makes }) {
   }, [localParts]);
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:0, position:'relative'}}>
-
-      {toast && (
-        <div className="save-toast">
-          <ICheck/> Pricing saved successfully!
-        </div>
-      )}
-
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20,flexWrap:'wrap',gap:12}}>
-        <div>
-          <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Parts Catalog Editor</h2>
-          <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Build modular catalogs by dropping categories from the Master Sidebar.</p>
-        </div>
-        
-        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'var(--input-bg)',border:'1px solid var(--border)',padding:'6px 14px',borderRadius:16}}>
-            <label style={{fontSize:12,fontWeight:700,color:'var(--text3)'}}>TARGET PRICING:</label>
-            <select value={selectedMake} onChange={handleMakeChange} style={{background:'var(--bg2)',color:'var(--text)',border:'1px solid var(--border)',padding:'6px 12px',borderRadius:8,fontSize:13,fontWeight:600,outline:'none',cursor:'pointer'}}>
-              <option value="default">Global Default (All Cars)</option>
-              <optgroup label="Car-Specific Pricing overrides">
-                {makes.map(m => <option key={m} value={m}>{m} {systemData?.make_catalogs?.[m] ? ' (Customized)' : ''}</option>)}
-              </optgroup>
-            </select>
+    <div style={{display:'flex', gap:20, alignItems:'flex-start', position:'relative'}}>
+      
+      {/* Main Content Area */}
+      <div style={{flex: 1, minWidth: 0, display:'flex',flexDirection:'column',gap:0}}>
+        {toast && (
+          <div className="save-toast">
+            <ICheck/> Pricing saved successfully!
           </div>
-          <button className="btn-p" onClick={() => setDrawerOpen(true)} style={{padding:'8px 16px', borderRadius:16}}><ILayout/> Open Master Drawer</button>
-        </div>
-      </div>
+        )}
 
-      <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:20}}>
-        <div style={{position:'relative',flex:1}}>
-          <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
-          <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
-            placeholder={`Search ${selectedMake==='default'?'Global':'Custom '+selectedMake} parts…`}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20,flexWrap:'wrap',gap:12}}>
+          <div>
+            <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Parts Catalog Editor</h2>
+            <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Build modular catalogs by dropping categories from the Master Sidebar.</p>
+          </div>
+          
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'var(--input-bg)',border:'1px solid var(--border)',padding:'6px 14px',borderRadius:16}}>
+              <label style={{fontSize:12,fontWeight:700,color:'var(--text3)'}}>TARGET PRICING:</label>
+              <select value={selectedMake} onChange={handleMakeChange} style={{background:'var(--bg2)',color:'var(--text)',border:'1px solid var(--border)',padding:'6px 12px',borderRadius:8,fontSize:13,fontWeight:600,outline:'none',cursor:'pointer'}}>
+                <option value="default">Global Default (All Cars)</option>
+                <optgroup label="Car-Specific Pricing overrides">
+                  {makes.map(m => <option key={m} value={m}>{m} {systemData?.make_catalogs?.[m] ? ' (Customized)' : ''}</option>)}
+                </optgroup>
+              </select>
+            </div>
+          </div>
         </div>
-        
-        <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
-          {localParts ? Object.keys(localParts).length : 0} categories · R {totalValue.toLocaleString()} value
+
+        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:20}}>
+          <div style={{position:'relative',flex:1}}>
+            <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
+            <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
+              placeholder={`Search ${selectedMake==='default'?'Global':'Custom '+selectedMake} parts…`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          
+          <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
+            {localParts ? Object.keys(localParts).length : 0} categories · R {totalValue.toLocaleString()} value
+          </div>
+          {dirty && (
+            <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
+              ● Unsaved changes
+            </div>
+          )}
         </div>
-        {dirty && (
-          <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
-            ● Unsaved changes
+
+        {localParts === null || Object.keys(localParts).length === 0 ? (
+          <div className="drop-zone anim-up" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+            <div style={{width:56,height:56,background:'var(--input-bg)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12,color:'var(--text2)'}}><ILayout/></div>
+            <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>This Catalog is Empty</h3>
+            <p style={{fontSize:13,color:'var(--text3)',margin:0,maxWidth:340,textAlign:'center'}}>Hover over the Master Drawer on the right and <b>drag categories here</b> to build the pricing catalog for {selectedMake}.</p>
+            <div className="btn-g" style={{marginTop:20, cursor:'default', borderStyle:'dashed', pointerEvents:'none'}}>Hover drawer on right to start</div>
+          </div>
+        ) : (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:14, minHeight:200}} 
+               className="drop-zone-active" 
+               onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+            
+            {filtered.map(([key, data]) => {
+              const isEditing = editingKey === key;
+              const categoryTotal = (data.parts || []).reduce((s, p) => s + (p.price || 0), 0);
+              
+              return (
+                <div key={key} className={`parts-card anim-up ${isEditing ? 'editing' : ''}`}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                    <div className="parts-icon">{data.icon || '🔧'}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
+                      <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>
+                        {(data.parts||[]).length} part(s) · <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>R {categoryTotal}</span>
+                      </p>
+                    </div>
+                    <button onClick={() => setEditingKey(isEditing ? null : key)}
+                      style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,transition:'all .15s'}}
+                    >
+                      <IEdit/> {isEditing ? 'Done' : 'Edit'}
+                    </button>
+                    <button onClick={() => handleRemoveCategory(key)} title="Remove Category"
+                      style={{background:'rgba(255,80,80,0.05)', border:'1px solid rgba(255,80,80,0.1)', color:'var(--red)', borderRadius:8, padding:'5px', cursor:'pointer', transition:'all .15s'}}>
+                      <ITrash/>
+                    </button>
+                  </div>
+
+                  <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                    {(data.parts || []).map((part, idx) => {
+                      const partObj = typeof part === 'string' ? {name: part, price: 0} : part;
+                      return (
+                        <div key={idx} className="part-item">
+                          <span className="part-dot"/>
+                          <span style={{flex:1,fontSize:12,color:'var(--text2)',textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={partObj.name}>{partObj.name}</span>
+                          
+                          <div className="price-input-wrap" style={{padding:'4px 8px'}}>
+                            <span style={{fontSize:11}}>R</span>
+                            <input type="number" value={partObj.price || 0} onChange={e => handlePartPriceChange(key, idx, e.target.value)} min={0} step={10} style={{width:60,fontSize:13}}/>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {localParts !== null && (
+          <div className="parts-save-banner">
+            <div>
+              <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
+                {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
+              </p>
+              <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
+                Saved to: <span className="mono" style={{fontSize:11}}>
+                  {selectedMake === 'default' ? 'Global Default Pricing' : `Overrides Pricing for ${selectedMake}`}
+                </span>
+              </p>
+            </div>
+            <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
+              {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save Pricing</>}
+            </button>
           </div>
         )}
       </div>
 
-      {localParts === null || Object.keys(localParts).length === 0 ? (
-        <div className="drop-zone anim-up" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-          <div style={{width:56,height:56,background:'var(--input-bg)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12,color:'var(--text2)'}}><ILayout/></div>
-          <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>This Catalog is Empty</h3>
-          <p style={{fontSize:13,color:'var(--text3)',margin:0,maxWidth:340,textAlign:'center'}}>Open the Master Drawer and <b>drag categories here</b> to build the pricing catalog for {selectedMake}.</p>
-          <button className="btn-g" onClick={() => setDrawerOpen(true)} style={{marginTop:20}}>Open Master Drawer</button>
-        </div>
-      ) : (
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:14, minHeight:200}} 
-             className="drop-zone-active" 
-             onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-          
-          {filtered.map(([key, data]) => {
-            const isEditing = editingKey === key;
-            const categoryTotal = (data.parts || []).reduce((s, p) => s + (p.price || 0), 0);
-            
-            return (
-              <div key={key} className={`parts-card anim-up ${isEditing ? 'editing' : ''}`}>
-                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                  <div className="parts-icon">{data.icon || '🔧'}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
-                    <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>
-                      {(data.parts||[]).length} part(s) · <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>R {categoryTotal}</span>
-                    </p>
-                  </div>
-                  <button onClick={() => setEditingKey(isEditing ? null : key)}
-                    style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,transition:'all .15s'}}
-                  >
-                    <IEdit/> {isEditing ? 'Done' : 'Edit'}
-                  </button>
-                  <button onClick={() => handleRemoveCategory(key)} title="Remove Category"
-                    style={{background:'rgba(255,80,80,0.05)', border:'1px solid rgba(255,80,80,0.1)', color:'var(--red)', borderRadius:8, padding:'5px', cursor:'pointer', transition:'all .15s'}}>
-                    <ITrash/>
-                  </button>
-                </div>
-
-                <div style={{display:'flex',flexDirection:'column',gap:0}}>
-                  {(data.parts || []).map((part, idx) => {
-                    const partObj = typeof part === 'string' ? {name: part, price: 0} : part;
-                    return (
-                      <div key={idx} className="part-item">
-                        <span className="part-dot"/>
-                        <span style={{flex:1,fontSize:12,color:'var(--text2)',textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={partObj.name}>{partObj.name}</span>
-                        
-                        <div className="price-input-wrap" style={{padding:'4px 8px'}}>
-                          <span style={{fontSize:11}}>R</span>
-                          <input type="number" value={partObj.price || 0} onChange={e => handlePartPriceChange(key, idx, e.target.value)} min={0} step={10} style={{width:60,fontSize:13}}/>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {localParts !== null && (
-        <div className="parts-save-banner">
-          <div>
-            <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
-              {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
-            </p>
-            <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
-              Saved to: <span className="mono" style={{fontSize:11}}>
-                {selectedMake === 'default' ? 'Global Default Pricing' : `Overrides Pricing for ${selectedMake}`}
-              </span>
-            </p>
-          </div>
-          <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
-            {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save Pricing</>}
-          </button>
-        </div>
-      )}
-
-      {/* MASTER DRAWER */}
-      <div className={`drawer ${drawerOpen ? 'open' : ''}`}>
-         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-            <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Master Categories</h3>
-            <button onClick={() => setDrawerOpen(false)} style={{background:'var(--input-bg)', border:'none', color:'var(--text3)', borderRadius:8, padding:4, cursor:'pointer'}}><IClose/></button>
+      {/* MASTER SIDE DRAWER (Hover to expand) */}
+      <div className="side-drawer">
+         <div className="side-drawer-collapsed">
+            <ILayout/>
+            <span style={{ writingMode: 'vertical-rl', marginTop: 24, fontSize: 11, fontWeight: 700, letterSpacing: 2 }}>MASTER DRAWER</span>
          </div>
-         <p style={{fontSize:12,color:'var(--text2)',marginBottom:16}}><b>Drag</b> these cards into the main window to add them to the {selectedMake} catalog.</p>
          
-         <div style={{flex:1, overflowY:'auto', paddingRight:4}}>
-            {Object.entries(masterCategories).map(([mKey, mData]) => {
-               const alreadyAdded = localParts && localParts[mKey];
-               return (
-                 <div key={mKey} draggable={!alreadyAdded} onDragStart={(e) => handleDragStart(e, mKey)} className="master-cat-card" style={{opacity: alreadyAdded ? 0.4 : 1, cursor: alreadyAdded ? 'not-allowed' : 'grab'}}>
-                    <span style={{fontSize:20}}>{mData.icon}</span>
-                    <div style={{flex:1}}>
-                       <p style={{fontSize:13, fontWeight:700, color:'var(--text)', margin:0}}>{mKey}</p>
-                       <p style={{fontSize:10, color:'var(--text3)', margin:0}}>{(mData.template||[]).length} template parts</p>
-                    </div>
-                    {alreadyAdded && <span style={{fontSize:10, fontWeight:700, color:'var(--accent)'}}><ICheck/> Added</span>}
-                 </div>
-               );
-            })}
-         </div>
-
-         <div style={{marginTop:16, borderTop:'1px solid var(--border)', paddingTop:16}}>
-            <p style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:10,letterSpacing:'0.5px'}}>CREATE NEW MASTER CATEGORY</p>
-            <div style={{display:'flex', gap:8, marginBottom:10}}>
-               <input className="field" style={{width:'50px', textAlign:'center', padding:'8px'}} value={newCatIcon} onChange={e=>setNewCatIcon(e.target.value)} maxLength={2} title="Emoji Icon"/>
-               <input className="field" style={{flex:1, padding:'8px 12px'}} placeholder="Category Name..." value={newCatName} onChange={e=>setNewCatName(e.target.value)}/>
+         <div className="side-drawer-content">
+            <div style={{marginBottom:16}}>
+               <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Master Categories</h3>
             </div>
-            <button className="btn-g" onClick={createMasterCategory} disabled={!newCatName.trim()} style={{width:'100%', justifyContent:'center'}}><IPlus/> Save to Master List</button>
+            <p style={{fontSize:12,color:'var(--text2)',marginBottom:16}}><b>Drag</b> these cards into the main window to add them to the {selectedMake} catalog.</p>
+            
+            <div className="side-drawer-scroll-area">
+               {Object.entries(masterCategories).map(([mKey, mData]) => {
+                  const alreadyAdded = localParts && localParts[mKey];
+                  return (
+                    <div key={mKey} draggable={!alreadyAdded} onDragStart={(e) => handleDragStart(e, mKey)} className="master-cat-card" style={{opacity: alreadyAdded ? 0.4 : 1, cursor: alreadyAdded ? 'not-allowed' : 'grab'}}>
+                       <span style={{fontSize:20}}>{mData.icon}</span>
+                       <div style={{flex:1}}>
+                          <p style={{fontSize:13, fontWeight:700, color:'var(--text)', margin:0}}>{mKey}</p>
+                          <p style={{fontSize:10, color:'var(--text3)', margin:0}}>{(mData.template||[]).length} template parts</p>
+                       </div>
+                       {alreadyAdded && <span style={{fontSize:10, fontWeight:700, color:'var(--accent)'}}><ICheck/> Added</span>}
+                    </div>
+                  );
+               })}
+            </div>
+
+            <div style={{marginTop:16, borderTop:'1px solid var(--border)', paddingTop:16}}>
+               <p style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:10,letterSpacing:'0.5px'}}>CREATE NEW MASTER CATEGORY</p>
+               <div style={{display:'flex', gap:8, marginBottom:10}}>
+                  <input className="field" style={{width:'50px', textAlign:'center', padding:'8px'}} value={newCatIcon} onChange={e=>setNewCatIcon(e.target.value)} maxLength={2} title="Emoji Icon"/>
+                  <input className="field" style={{flex:1, padding:'8px 12px'}} placeholder="Category Name..." value={newCatName} onChange={e=>setNewCatName(e.target.value)}/>
+               </div>
+               <button className="btn-g" onClick={createMasterCategory} disabled={!newCatName.trim()} style={{width:'100%', justifyContent:'center'}}><IPlus/> Save to Master List</button>
+            </div>
          </div>
       </div>
-      {drawerOpen && <div className="modal-overlay" style={{zIndex:201}} onClick={() => setDrawerOpen(false)} />}
     </div>
   );
 }
