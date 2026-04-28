@@ -35,7 +35,7 @@
       --input-bg:rgba(255,255,255,0.05);--input-border:rgba(255,255,255,0.1);
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;margin:0;transition:background .3s,color .3s}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;margin:0;transition:background .3s,color .3s;overflow-x:hidden}
     ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
     .surface{background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
     .field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:11px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;transition:all .2s}
@@ -49,6 +49,7 @@
     .btn-g:hover{background:var(--border);color:var(--text)}
     .mono{font-family:'JetBrains Mono',monospace}
     @keyframes slideUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes slideRight{0%{opacity:0;transform:translateX(100%)}100%{opacity:1;transform:translateX(0)}}
     @keyframes shimmer{0%{background-position:-500px 0}100%{background-position:500px 0}}
     @keyframes overlayIn{0%{opacity:0}100%{opacity:1}}
     @keyframes modalIn{0%{opacity:0;transform:translate(-50%,-46%) scale(0.95)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
@@ -69,8 +70,18 @@
     .dm-pill{display:flex;align-items:center;background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:3px;gap:2px;cursor:pointer}
     .dm-btn{width:30px;height:30px;border-radius:100px;display:flex;align-items:center;justify-content:center;transition:all .25s;color:var(--text3)}
     .dm-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px var(--accent-glow)}
-    .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);animation:overlayIn .2s ease}
+    .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);animation:overlayIn .2s ease forwards}
     .modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:201;background:var(--bg2);border:1px solid var(--border);border-radius:24px;width:min(92vw,680px);max-height:88vh;overflow-y:auto;padding:32px;box-shadow:var(--shadow-lg);animation:modalIn .3s cubic-bezier(.16,1,.3,1)}
+    
+    /* DRAWER */
+    .drawer{position:fixed;top:0;right:0;height:100vh;width:340px;background:var(--bg2);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:202;padding:24px 16px;display:flex;flex-direction:column;animation:slideRight .3s cubic-bezier(.16,1,.3,1) forwards;transform:translateX(100%)}
+    .drawer.open{transform:translateX(0)}
+    .master-cat-card{padding:12px;border-radius:12px;background:var(--input-bg);border:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:grab;transition:all .2s;user-select:none}
+    .master-cat-card:active{cursor:grabbing;transform:scale(0.98)}
+    .master-cat-card:hover{border-color:var(--accent);background:rgba(77,123,255,0.05)}
+    .drop-zone{min-height:200px;border:2px dashed var(--border);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);transition:all .2s}
+    .drop-zone.drag-over{background:rgba(77,123,255,0.1);border-color:var(--accent);color:var(--accent)}
+
     .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:100px;font-size:10px;font-weight:800;padding:1px 5px;font-family:'JetBrains Mono',monospace;animation:badgePop .3s ease;border:2px solid var(--bg2)}
     .tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(77,123,255,0.08);color:var(--accent);border:1px solid rgba(77,123,255,0.18);margin:2px;font-family:'JetBrains Mono'}
     .print-btn{background:linear-gradient(135deg,#00b86e,#007a4a);color:#fff;border:none;border-radius:100px;padding:10px 20px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
@@ -93,6 +104,7 @@
     .dd-search{padding:8px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2)}
     .dd-search input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:8px;padding:7px 12px;width:100%;outline:none;font-size:12px;font-family:'Inter',sans-serif}
     .dd-search input:focus{border-color:var(--accent)}
+    
     .auth-gate{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity .4s ease}
     .auth-gate.hidden{opacity:0;pointer-events:none}
     .auth-gate-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
@@ -101,7 +113,7 @@
     input[type=number]::-webkit-inner-spin-button{opacity:1}
 
     /* ── Parts Catalog specific ── */
-    .parts-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;transition:border-color .2s,box-shadow .2s}
+    .parts-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;transition:border-color .2s,box-shadow .2s;position:relative}
     .parts-card:hover{border-color:rgba(77,123,255,0.3);box-shadow:0 4px 20px rgba(77,123,255,0.08)}
     .parts-card.editing{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
     .part-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border2)}
@@ -145,15 +157,17 @@ const auth=firebase.auth(), db=firebase.database();
 const LABOR=750;
 
 /* ════════════════════════════════════════════════════════════
-   DEFAULT CATALOGS (Seeded with individual part prices)
+   DEFAULT CATALOGS & TEMPLATES
    ════════════════════════════════════════════════════════════ */
-const DEFAULT_PARTS_CATALOG = {
-  "Engine Oil & Filter":   { icon:"🛢", parts:[{name:"Engine Oil (5L)",price:350},{name:"Oil Filter",price:120},{name:"Drain Plug Washer",price:30}] },
-  "Air Filter":            { icon:"💨", parts:[{name:"Air Filter Element",price:220}] },
-  "Cabin Filter":          { icon:"🌬", parts:[{name:"Cabin Air Filter / Pollen Filter",price:180}] },
-  "Spark Plugs":           { icon:"⚡", parts:[{name:"Iridium Spark Plugs x4",price:380},{name:"Copper Spark Plugs x4",price:200}] },
-  "Brake Pads":            { icon:"🔴", parts:[{name:"Front Brake Pad Set",price:620},{name:"Rear Brake Pad Set",price:580}] },
-  "Brake Discs":           { icon:"⚙",  parts:[{name:"Front Brake Disc Pair",price:980},{name:"Rear Brake Disc Pair",price:900}] }
+const DEFAULT_MASTER_CATEGORIES = {
+  "Engine Oil & Filter": { icon: "🛢", template: [{name:"Engine Oil (5L)",price:0}, {name:"Oil Filter",price:0}, {name:"Drain Plug Washer",price:0}] },
+  "Air Filter": { icon: "💨", template: [{name:"Air Filter Element",price:0}] },
+  "Cabin Filter": { icon: "🌬", template: [{name:"Cabin Air Filter / Pollen Filter",price:0}] },
+  "Spark Plugs": { icon: "⚡", template: [{name:"Iridium Spark Plugs x4",price:0}, {name:"Copper Spark Plugs x4",price:0}] },
+  "Brake Pads": { icon: "🔴", template: [{name:"Front Brake Pad Set",price:0}, {name:"Rear Brake Pad Set",price:0}] },
+  "Brake Discs": { icon: "⚙", template: [{name:"Front Brake Disc Pair",price:0}, {name:"Rear Brake Disc Pair",price:0}] },
+  "Battery": { icon: "🔋", template: [{name:"Lead Acid Battery 12V",price:0}] },
+  "Wiper Blades": { icon: "🌧", template: [{name:"Front Wiper Pair",price:0}, {name:"Rear Wiper",price:0}] }
 };
 
 const WORLD_CARS = {
@@ -166,15 +180,34 @@ const WORLD_CARS = {
   "Toyota":{ models:["Camry","Corolla","Corolla Cross","Fortuner","Hilux","Land Cruiser","RAV4","Yaris"], engines:["1GD-FTV 2.8L Diesel","1NR-FE 1.3L","1ZR-FE 1.6L","2GD-FTV 2.4L Diesel","2TR-FE 2.7L Petrol","M20A-FKS 2.0L"] },
   "Volkswagen":{ models:["Amarok","Golf","Golf GTI","Golf R","Polo","Tiguan","Touareg"], engines:["1.0L TSI","1.4L TSI","2.0L TSI GTI","2.0L TDI Diesel","3.0L TDI V6"] },
 };
-
 const ALL_MAKES = Object.keys(WORLD_CARS).sort();
-
 const DEFAULT_CAR_DB = {
   "Toyota":{"Corolla":{"2018-2023":["1ZR-FE 1.6L","2ZR-FE 1.8L"],"2014-2017":["1NR-FE 1.3L","1ZR-FE 1.6L"]},"Hilux":{"2016-2023":["2GD-FTV 2.4L Diesel","1GD-FTV 2.8L Diesel"]},"RAV4":{"2019-2023":["M20A-FKS 2.0L","A25A-FXS 2.5L Hybrid"]}},
   "Volkswagen":{"Polo":{"2018-2023":["CHZB 1.0L TSI","DKRA 1.0L TSI","DKLA 1.6L"]},"Golf":{"2020-2023":["CZCA 1.4L TSI","CHHB 2.0L GTI"]}},
 };
 
-/* ── Icons ── */
+/* ── PORTAL FOR MODALS ── */
+const Portal = ({ children }) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? ReactDOM.createPortal(children, document.body) : null;
+};
+
+/* ── HELPERS ── */
+const getStatusUI = (s) => {
+  const map = {
+    'pending_approval': { l: 'PENDING', c: 'var(--amber)', bg: 'rgba(255,184,0,0.1)', b: 'rgba(255,184,0,0.2)' },
+    'approved': { l: 'APPROVED', c: 'var(--cyan)', bg: 'rgba(0,144,255,0.1)', b: 'rgba(0,144,255,0.2)' },
+    'rejected': { l: 'REJECTED', c: 'var(--red)', bg: 'rgba(255,80,80,0.1)', b: 'rgba(255,80,80,0.2)' },
+    'in_progress': { l: 'IN PROGRESS', c: 'var(--accent)', bg: 'rgba(77,123,255,0.1)', b: 'rgba(77,123,255,0.2)' },
+    'waiting_parts': { l: 'WAITING PARTS', c: 'var(--amber)', bg: 'rgba(255,184,0,0.1)', b: 'rgba(255,184,0,0.2)' },
+    'ready_for_qa': { l: 'READY FOR QA', c: 'var(--purple)', bg: 'rgba(139,92,246,0.1)', b: 'rgba(139,92,246,0.2)' },
+    'completed': { l: 'COMPLETED', c: 'var(--green)', bg: 'rgba(0,255,136,0.1)', b: 'rgba(0,255,136,0.2)' }
+  };
+  return map[s] || { l: s?.toUpperCase() || 'UNKNOWN', c: 'var(--text3)', bg: 'var(--input-bg)', b: 'var(--border)' };
+};
+
+/* ── ICONS ── */
 const IWrench=()=><svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
 const IDash=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
 const ICar=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
@@ -193,6 +226,8 @@ const ISave=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewB
 const IChevDown=()=><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>;
 const ITag=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
 const IEdit=()=><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
+const ITrash=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>;
+const ILayout=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>;
 
 function DarkModePill({dark,onToggle}){
   return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
@@ -275,13 +310,13 @@ function exportJobPDF(job, shopInfo){
   doc.text(`Issued: ${new Date().toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'})}`,14,31);
   doc.text(`Ref: JOB-${job.id.slice(-8).toUpperCase()}`,pw-14,24,{align:'right'});
   doc.text(`Authorised by: ${adminName}`,pw-14,31,{align:'right'});
-  if(job.status==='approved'){doc.setTextColor(0,255,136);doc.setFontSize(48);doc.setFont('helvetica','bold');doc.setGState(new doc.GState({opacity:0.06}));doc.text('APPROVED',pw/2,150,{align:'center',angle:45});doc.setGState(new doc.GState({opacity:1}));}
+  if(job.status==='approved'||job.status==='completed'){doc.setTextColor(0,255,136);doc.setFontSize(48);doc.setFont('helvetica','bold');doc.setGState(new doc.GState({opacity:0.06}));doc.text(job.status.toUpperCase(),pw/2,150,{align:'center',angle:45});doc.setGState(new doc.GState({opacity:1}));}
   doc.setFillColor(15,22,55);doc.roundedRect(10,48,pw-20,24,3,3,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,245,255);doc.text('VEHICLE INFORMATION',16,57);
   doc.setFont('helvetica','normal');doc.setTextColor(200,210,240);doc.setFontSize(9);
   const v=job.vehicle||{};
   doc.text(`${v.make||'—'} ${v.model||'—'} ${v.year||''}`,16,64);
-  doc.text(`Reg: ${v.reg||'—'}   Engine: ${v.engine||'—'}   Odometer: ${v.km||'—'} km`,16,70);
+  doc.text(`Reg: ${v.reg||'—'}   Engine: ${v.engine||'—'}  Odometer: ${v.km||'—'} km`,16,70);
   if(v.vin)doc.text(`VIN: ${v.vin}`,16,76);
   doc.setFillColor(20,30,65);doc.roundedRect(pw-100,48,90,24,3,3,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,245,255);doc.text('MECHANIC',pw-96,57);
@@ -289,7 +324,6 @@ function exportJobPDF(job, shopInfo){
   doc.text(job.mechanic?.name||'—',pw-96,64);doc.text(job.mechanic?.shop||'—',pw-96,70);
   let y=(v.vin?78:72)+8;
   
-  // Parse parts safely to strings for PDF
   const parseParts = (partsArr) => {
     return (partsArr || []).map(p => typeof p === 'string' ? p : p.name).join(', ') || '—';
   };
@@ -317,12 +351,32 @@ function exportJobPDF(job, shopInfo){
   doc.text('VAT 15%',pw-92,fy+37,{align:'right'});doc.text(`R ${(fin.vat||0).toFixed(2)}`,rc,fy+37,{align:'right'});
   doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(26,79,255);
   doc.text('GRAND TOTAL',pw-92,fy+49,{align:'right'});doc.text(`R ${(fin.grandTotal||0).toFixed(2)}`,rc,fy+49,{align:'right'});
-  if(job.notes){doc.setFillColor(255,240,200);doc.roundedRect(10,fy,pw-104,30,3,3,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,100,0);doc.text('MECHANIC NOTES',16,fy+9);doc.setFont('helvetica','normal');doc.setTextColor(80,60,0);doc.setFontSize(8);const ns=doc.splitTextToSize(job.notes,pw-120);doc.text(ns,16,fy+17);}
-  if(job.status==='approved'||job.status==='rejected'){const sc=job.status==='approved'?[0,180,110]:[224,48,48];doc.setDrawColor(...sc);doc.setLineWidth(1.5);doc.roundedRect(10,fy+56,50,14,3,3,'S');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...sc);doc.text(job.status.toUpperCase(),35,fy+65,{align:'center'});}
+  
+  if(job.notes){
+    doc.setFillColor(255,240,200);doc.roundedRect(10,fy,pw-104,24,3,3,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,100,0);doc.text('MECHANIC NOTES',16,fy+7);
+    doc.setFont('helvetica','normal');doc.setTextColor(80,60,0);doc.setFontSize(8);
+    const ns=doc.splitTextToSize(job.notes,pw-120);doc.text(ns,16,fy+13);
+  }
+
+  // Add digital signature to PDF if available
+  if(job.signature) {
+    try {
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(100,120,160);
+      doc.text('CUSTOMER SIGNATURE',10,fy+32);
+      doc.addImage(job.signature, 'PNG', 10, fy+34, 46, 18);
+    } catch(e) { console.error('Signature PDF error:', e); }
+  }
+
+  if(job.photos?.length > 0) {
+      doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(100,120,160);
+      doc.text(`* ${job.photos.length} supporting photo(s) attached to digital record.`,10,fy+(job.signature?56:32));
+  }
+
   const ph=doc.internal.pageSize.getHeight();
   doc.setFillColor(7,12,26);doc.rect(0,ph-14,pw,14,'F');
   doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,120,160);
-  doc.text(`VynixPanelB Admin Dashboard | This is an official quotation | Job ID: ${job.id}`,pw/2,ph-7,{align:'center'});
+  doc.text(`VynixPanelB Admin Dashboard | Official Quotation | Job ID: ${job.id}`,pw/2,ph-7,{align:'center'});
   doc.save(`Quote_${v.make||'Vehicle'}_${v.reg||'REG'}_${Date.now()}.pdf`);
 }
 
@@ -332,6 +386,7 @@ function exportJobPDF(job, shopInfo){
 function JobModal({job,onClose,onStatusChange,shopInfo}){
   const v=job.vehicle||{};
   const fin=job.financials||{};
+  const sUI = getStatusUI(job.status);
   
   const parseParts = (partsArr) => {
     return (partsArr || []).map(p => typeof p === 'string' ? p : p.name).join(', ') || 'Labour only';
@@ -345,8 +400,8 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
           <div>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
               <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>{v.make} {v.model}</h2>
-              <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:100,fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='rejected'?'rgba(255,80,80,0.1)':'rgba(255,184,0,0.1)',color:job.status==='approved'?'var(--green)':job.status==='rejected'?'var(--red)':'var(--amber)',border:`1px solid ${job.status==='approved'?'rgba(0,255,136,0.2)':job.status==='rejected'?'rgba(255,80,80,0.2)':'rgba(255,184,0,0.2)'}`}}>
-                {job.status==='pending_approval'?'⬤ PENDING':job.status==='approved'?'⬤ APPROVED':'⬤ REJECTED'}
+              <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:100,fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',background:sUI.bg,color:sUI.c,border:`1px solid ${sUI.b}`}}>
+                ⬤ {sUI.l}
               </span>
             </div>
             <p style={{fontSize:12,color:'var(--text3)',margin:0}}>Job ID: {job.id.slice(-12).toUpperCase()} · {job.createdAt?new Date(job.createdAt).toLocaleString('en-ZA',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'–'}</p>
@@ -365,6 +420,7 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
           <div><p style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:'0 0 2px',letterSpacing:'0.5px'}}>MECHANIC</p><p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{job.mechanic?.name||'—'}</p></div>
           <div style={{textAlign:'right'}}><p style={{fontSize:9,fontWeight:700,color:'var(--accent)',margin:'0 0 2px',letterSpacing:'0.5px'}}>WORKSHOP</p><p style={{fontSize:13,color:'var(--text2)',margin:0}}>{job.mechanic?.shop||'—'}</p></div>
         </div>
+        
         <div style={{marginBottom:16}}>
           <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>SERVICES REQUESTED ({(job.services||[]).length})</p>
           <div style={{border:'1px solid var(--border)',borderRadius:14,overflow:'hidden'}}>
@@ -376,6 +432,36 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
             ))}
           </div>
         </div>
+
+        {/* Media & Signature Render */}
+        {(job.photos?.length > 0 || job.signature || job.notes) && (
+          <div style={{padding:14, borderRadius:14, background:'var(--surface)', border:'1px solid var(--border)', marginBottom:16}}>
+            <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--text3)',margin:'0 0 10px',letterSpacing:'0.5px'}}>DOCUMENTS & NOTES</p>
+            {job.photos?.length > 0 && (
+              <div style={{display:'flex', gap:8, overflowX:'auto', marginBottom:12, paddingBottom:6}}>
+                {job.photos.map((p, idx) => (
+                  <a key={idx} href={p} target="_blank" rel="noreferrer" style={{flexShrink:0}}>
+                    <img src={p} style={{width:72, height:72, borderRadius:10, objectFit:'cover', border:'1px solid var(--border)', transition:'transform .2s'}} onMouseOver={e=>e.currentTarget.style.transform='scale(1.05)'} onMouseOut={e=>e.currentTarget.style.transform='scale(1)'} alt="Damage" />
+                  </a>
+                ))}
+              </div>
+            )}
+            {job.signature && (
+              <div style={{marginBottom:12}}>
+                 <p style={{fontSize:10, color:'var(--text3)', margin:'0 0 4px', fontWeight:600}}>Customer Signature:</p>
+                 <div style={{background:'#fff', borderRadius:10, padding:6, display:'inline-block', border:'1px solid var(--border)'}}>
+                   <img src={job.signature} style={{height: 60, objectFit:'contain'}} alt="Signature"/>
+                 </div>
+              </div>
+            )}
+            {job.notes && (
+              <div style={{padding:'10px',borderRadius:10,background:'rgba(255,184,0,0.06)',border:'1px solid rgba(255,184,0,0.15)'}}>
+                <p style={{fontSize:12,color:'var(--text2)',margin:0}}>📝 {job.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:14,padding:'14px 16px',marginBottom:16}}>
           {[[`Labour (${((fin.laborTotal||0)/LABOR).toFixed(1)}h × R${LABOR})`,`R ${(fin.laborTotal||0).toFixed(2)}`],['Parts & Materials',`R ${(fin.partsTotal||0).toFixed(2)}`],['Subtotal',`R ${(fin.subtotal||0).toFixed(2)}`],['VAT 15%',`R ${(fin.vat||0).toFixed(2)}`]].map(([l,v])=>(
             <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',fontSize:13,color:'var(--text2)'}}>
@@ -387,15 +473,33 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
             <span className="mono" style={{fontSize:24,fontWeight:900,color:'var(--accent)'}}>R {(fin.grandTotal||0).toFixed(2)}</span>
           </div>
         </div>
-        {job.notes&&<div style={{padding:'10px 14px',borderRadius:12,background:'rgba(255,184,0,0.07)',border:'1px solid rgba(255,184,0,0.2)',marginBottom:16}}>
-          <p style={{fontSize:9,fontWeight:700,color:'var(--amber)',margin:'0 0 4px',letterSpacing:'0.5px'}}>MECHANIC NOTES</p>
-          <p style={{fontSize:13,color:'var(--text2)',margin:0}}>{job.notes}</p>
-        </div>}
-        <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
-          <button className="print-btn" onClick={()=>exportJobPDF(job,shopInfo)}><IPrint/> Print / Download PDF</button>
-          {job.status!=='approved'&&<button onClick={()=>{onStatusChange(job.id,'approved');onClose();}} style={{padding:'10px 20px',borderRadius:100,fontSize:13,fontWeight:700,background:'rgba(0,255,136,0.1)',color:'var(--green)',border:'1px solid rgba(0,255,136,0.2)',cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',gap:6}}><ICheck/> Approve</button>}
-          {job.status!=='rejected'&&<button onClick={()=>{onStatusChange(job.id,'rejected');onClose();}} style={{padding:'10px 20px',borderRadius:100,fontSize:13,fontWeight:700,background:'rgba(255,80,80,0.08)',color:'var(--red)',border:'1px solid rgba(255,80,80,0.18)',cursor:'pointer',fontFamily:'Inter'}}>✕ Reject</button>}
-          {job.status!=='pending_approval'&&<button onClick={()=>{onStatusChange(job.id,'pending_approval');}} className="btn-g" style={{fontSize:13}}>↩ Reset to Pending</button>}
+        
+        <div style={{display:'flex',flexWrap:'wrap',gap:10, alignItems:'center'}}>
+          <button className="print-btn" onClick={()=>exportJobPDF(job,shopInfo)}><IPrint/> Save PDF</button>
+          <div style={{flex:1}}/>
+          {job.status==='pending_approval' && (
+            <>
+              <button onClick={()=>{onStatusChange(job.id,'rejected');onClose();}} style={{padding:'10px 20px',borderRadius:100,fontSize:13,fontWeight:700,background:'rgba(255,80,80,0.08)',color:'var(--red)',border:'1px solid rgba(255,80,80,0.18)',cursor:'pointer',fontFamily:'Inter'}}>✕ Reject</button>
+              <button onClick={()=>{onStatusChange(job.id,'approved');onClose();}} style={{padding:'10px 20px',borderRadius:100,fontSize:13,fontWeight:700,background:'var(--accent)',color:'#fff',border:'none',cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',gap:6}}><ICheck/> Approve Quote</button>
+            </>
+          )}
+          {job.status!=='pending_approval' && (
+             <div className="dd-wrap" style={{width:'auto'}}>
+                <select 
+                  value={job.status} 
+                  onChange={e => onStatusChange(job.id, e.target.value)}
+                  style={{padding:'10px 16px', borderRadius:100, fontSize:13, fontWeight:700, background:'var(--input-bg)', border:'1px solid var(--border)', color:'var(--text)', outline:'none', cursor:'pointer', fontFamily:'Inter', appearance:'none', paddingRight:32}}
+                >
+                  <option value="approved">Approved</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="waiting_parts">Waiting Parts</option>
+                  <option value="ready_for_qa">Ready for QA</option>
+                  <option value="completed">Completed</option>
+                  <option value="pending_approval">Revert to Pending</option>
+                </select>
+                <div style={{position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none'}}><IChevDown/></div>
+             </div>
+          )}
         </div>
       </div>
     </>
@@ -403,38 +507,44 @@ function JobModal({job,onClose,onStatusChange,shopInfo}){
 }
 
 /* ════════════════════════════════════════════════════════════
-   PARTS CATALOG VIEW
+   PARTS CATALOG VIEW (WITH DRAG & DROP DRAWER)
    ════════════════════════════════════════════════════════════ */
 function PartsCatalogView({ systemData, makes }) {
   const [selectedMake, setSelectedMake] = useState('default');
   const [localParts, setLocalParts] = useState(null);
+  const [masterCategories, setMasterCategories] = useState({});
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
   const [search, setSearch] = useState('');
-  const [newPartName, setNewPartName] = useState('');
-  const [addingPartTo, setAddingPartTo] = useState(null);
+  
+  // Drawer State
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('🔧');
 
-  // Sync state when systemData or selectedMake changes
+  // Load master categories from Firebase or default
+  useEffect(() => {
+    if(systemData?.master_categories) {
+       setMasterCategories(systemData.master_categories);
+    } else {
+       setMasterCategories(DEFAULT_MASTER_CATEGORIES);
+       db.ref('system/master_categories').set(DEFAULT_MASTER_CATEGORIES);
+    }
+  }, [systemData]);
+
+  // Sync state when selectedMake changes
   useEffect(() => {
     if (selectedMake === 'default') {
-      setLocalParts(JSON.parse(JSON.stringify(systemData?.parts_catalog || DEFAULT_PARTS_CATALOG)));
+      setLocalParts(JSON.parse(JSON.stringify(systemData?.parts_catalog || {})));
     } else {
       const makeCat = systemData?.make_catalogs?.[selectedMake];
-      if (makeCat) {
-        setLocalParts(JSON.parse(JSON.stringify(makeCat)));
-      } else {
-        setLocalParts(null); // Indicates no custom catalog exists for this make yet
-      }
+      setLocalParts(makeCat ? JSON.parse(JSON.stringify(makeCat)) : {}); 
     }
     setDirty(false);
+    setSearch('');
   }, [systemData, selectedMake]);
-
-  const handleInitCustomCatalog = () => {
-    setLocalParts(JSON.parse(JSON.stringify(systemData?.parts_catalog || DEFAULT_PARTS_CATALOG)));
-    setDirty(true);
-  };
 
   const handleMakeChange = (e) => {
     if (dirty && !window.confirm('You have unsaved changes. Discard them?')) return;
@@ -453,25 +563,11 @@ function PartsCatalogView({ systemData, makes }) {
     setDirty(true);
   };
 
-  const handleAddPart = (key) => {
-    const name = newPartName.trim();
-    if (!name) return;
+  const handleRemoveCategory = (key) => {
+    if(!window.confirm(`Remove ${key} from this catalog?`)) return;
     setLocalParts(prev => {
       const next = {...prev};
-      const parts = [...(next[key].parts || [])].map(p => typeof p === 'string' ? {name: p, price: 0} : p);
-      parts.push({ name, price: 0 });
-      next[key].parts = parts;
-      return next;
-    });
-    setNewPartName('');
-    setAddingPartTo(null);
-    setDirty(true);
-  };
-
-  const handleRemovePart = (key, idx) => {
-    setLocalParts(prev => {
-      const next = {...prev};
-      next[key].parts = next[key].parts.filter((_, i) => i !== idx);
+      delete next[key];
       return next;
     });
     setDirty(true);
@@ -490,6 +586,47 @@ function PartsCatalogView({ systemData, makes }) {
       setTimeout(() => setToast(false), 2800);
     } catch (e) { alert(e.message); }
     setSaving(false);
+  };
+
+  // ── DRAG AND DROP HANDLERS ──
+  const handleDragStart = (e, key) => {
+    e.dataTransfer.setData('text/plain', key);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  const handleDragLeave = (e) => {
+    e.currentTarget.classList.remove('drag-over');
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const key = e.dataTransfer.getData('text/plain');
+    
+    if(key && masterCategories[key] && (!localParts || !localParts[key])) {
+       setLocalParts(prev => ({
+           ...(prev || {}),
+           [key]: { 
+              icon: masterCategories[key].icon, 
+              parts: (masterCategories[key].template || []).map(p => ({...p})) 
+           }
+       }));
+       setDirty(true);
+    }
+  };
+
+  const createMasterCategory = async () => {
+     if(!newCatName.trim()) return;
+     const n = newCatName.trim();
+     try {
+       await db.ref(`system/master_categories/${n}`).set({ icon: newCatIcon, template: [] });
+       setNewCatName('');
+       setNewCatIcon('🔧');
+     } catch(e) { alert("Error adding master category"); }
   };
 
   const filtered = useMemo(() => {
@@ -514,7 +651,7 @@ function PartsCatalogView({ systemData, makes }) {
   }, [localParts]);
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:0}}>
+    <div style={{display:'flex',flexDirection:'column',gap:0, position:'relative'}}>
 
       {toast && (
         <div className="save-toast">
@@ -524,160 +661,155 @@ function PartsCatalogView({ systemData, makes }) {
 
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20,flexWrap:'wrap',gap:12}}>
         <div>
-          <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Parts Catalog</h2>
-          <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Set individual part prices for mechanics to use when building job quotes.</p>
+          <h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Parts Catalog Editor</h2>
+          <p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Build modular catalogs by dropping categories from the Master Sidebar.</p>
         </div>
         
-        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'var(--input-bg)',border:'1px solid var(--border)',padding:'6px 14px',borderRadius:16}}>
-          <label style={{fontSize:12,fontWeight:700,color:'var(--text3)'}}>TARGET PRICING:</label>
-          <select value={selectedMake} onChange={handleMakeChange} style={{background:'var(--bg2)',color:'var(--text)',border:'1px solid var(--border)',padding:'6px 12px',borderRadius:8,fontSize:13,fontWeight:600,outline:'none',cursor:'pointer'}}>
-            <option value="default">Global Default (All Cars)</option>
-            <optgroup label="Car-Specific Pricing overrides">
-              {makes.map(m => <option key={m} value={m}>{m} {systemData?.make_catalogs?.[m] ? ' (Customized)' : ''}</option>)}
-            </optgroup>
-          </select>
+        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'var(--input-bg)',border:'1px solid var(--border)',padding:'6px 14px',borderRadius:16}}>
+            <label style={{fontSize:12,fontWeight:700,color:'var(--text3)'}}>TARGET PRICING:</label>
+            <select value={selectedMake} onChange={handleMakeChange} style={{background:'var(--bg2)',color:'var(--text)',border:'1px solid var(--border)',padding:'6px 12px',borderRadius:8,fontSize:13,fontWeight:600,outline:'none',cursor:'pointer'}}>
+              <option value="default">Global Default (All Cars)</option>
+              <optgroup label="Car-Specific Pricing overrides">
+                {makes.map(m => <option key={m} value={m}>{m} {systemData?.make_catalogs?.[m] ? ' (Customized)' : ''}</option>)}
+              </optgroup>
+            </select>
+          </div>
+          <button className="btn-p" onClick={() => setDrawerOpen(true)} style={{padding:'8px 16px', borderRadius:16}}><ILayout/> Open Master Drawer</button>
         </div>
       </div>
 
-      {localParts === null ? (
-        <div style={{textAlign:'center',padding:'80px 20px',background:'var(--surface)',borderRadius:16,border:'1px dashed var(--border)'}}>
-          <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>No custom pricing for {selectedMake}</h3>
-          <p style={{fontSize:13,color:'var(--text2)',margin:'0 0 24px',maxWidth:400,marginLeft:'auto',marginRight:'auto'}}>
-            Currently, {selectedMake} vehicles use the <b>Global Default Pricing</b>. If you want to set specific part prices for {selectedMake}, click below to initialize a dedicated catalog.
-          </p>
-          <button className="btn-p" onClick={handleInitCustomCatalog}><IPlus/> Create Custom Pricing for {selectedMake}</button>
+      <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:20}}>
+        <div style={{position:'relative',flex:1}}>
+          <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
+          <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
+            placeholder={`Search ${selectedMake==='default'?'Global':'Custom '+selectedMake} parts…`}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        
+        <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
+          {localParts ? Object.keys(localParts).length : 0} categories · R {totalValue.toLocaleString()} value
+        </div>
+        {dirty && (
+          <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
+            ● Unsaved changes
+          </div>
+        )}
+      </div>
+
+      {localParts === null || Object.keys(localParts).length === 0 ? (
+        <div className="drop-zone anim-up" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+          <div style={{width:56,height:56,background:'var(--input-bg)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12,color:'var(--text2)'}}><ILayout/></div>
+          <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 8px'}}>This Catalog is Empty</h3>
+          <p style={{fontSize:13,color:'var(--text3)',margin:0,maxWidth:340,textAlign:'center'}}>Open the Master Drawer and <b>drag categories here</b> to build the pricing catalog for {selectedMake}.</p>
+          <button className="btn-g" onClick={() => setDrawerOpen(true)} style={{marginTop:20}}>Open Master Drawer</button>
         </div>
       ) : (
-        <>
-          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:20}}>
-            <div style={{position:'relative',flex:1}}>
-              <div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'var(--text3)',pointerEvents:'none'}}><ISearch/></div>
-              <input className="search-input" style={{paddingLeft:40,maxWidth:340}}
-                placeholder={`Search ${selectedMake==='default'?'Global':'Custom '+selectedMake} parts…`}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:14, minHeight:200}} 
+             className="drop-zone-active" 
+             onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+          
+          {filtered.map(([key, data]) => {
+            const isEditing = editingKey === key;
+            const categoryTotal = (data.parts || []).reduce((s, p) => s + (p.price || 0), 0);
             
-            <div style={{padding:'8px 16px',borderRadius:12,background:'rgba(77,123,255,0.08)',border:'1px solid rgba(77,123,255,0.2)',fontSize:12,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:700}}>
-              {Object.keys(localParts).length} categories · R {totalValue.toLocaleString()} total value
-            </div>
-            {dirty && (
-              <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:10,background:'rgba(255,184,0,0.1)',border:'1px solid rgba(255,184,0,0.25)',fontSize:12,color:'var(--amber)',fontWeight:700}}>
-                ● Unsaved changes
-              </div>
-            )}
-          </div>
-
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:14}}>
-            {filtered.map(([key, data]) => {
-              const isEditing = editingKey === key;
-              const isAddingHere = addingPartTo === key;
-              const categoryTotal = (data.parts || []).reduce((s, p) => s + (p.price || 0), 0);
-              
-              return (
-                <div key={key} className={`parts-card ${isEditing ? 'editing' : ''}`}>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                    <div className="parts-icon">{data.icon || '🔧'}</div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
-                      <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>
-                        {(data.parts||[]).length} part(s) · <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>R {categoryTotal}</span>
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => { setEditingKey(isEditing ? null : key); setAddingPartTo(null); setNewPartName(''); }}
-                      style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,fontFamily:'Inter',transition:'all .15s',flexShrink:0}}
-                    >
-                      <IEdit/> {isEditing ? 'Done' : 'Edit parts'}
-                    </button>
+            return (
+              <div key={key} className={`parts-card anim-up ${isEditing ? 'editing' : ''}`}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                  <div className="parts-icon">{data.icon || '🔧'}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{fontSize:13,fontWeight:800,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{key}</p>
+                    <p style={{fontSize:10,color:'var(--text3)',margin:'2px 0 0'}}>
+                      {(data.parts||[]).length} part(s) · <span className="mono" style={{color:'var(--accent)',fontWeight:700}}>R {categoryTotal}</span>
+                    </p>
                   </div>
-
-                  <div style={{display:'flex',flexDirection:'column',gap:0}}>
-                    {(data.parts || []).map((part, idx) => {
-                      const partObj = typeof part === 'string' ? {name: part, price: 0} : part;
-                      return (
-                        <div key={idx} className="part-item" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid var(--border2)'}}>
-                          <span className="part-dot"/>
-                          <span style={{flex:1,fontSize:12,color:'var(--text2)',textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={partObj.name}>{partObj.name}</span>
-                          
-                          <div className="price-input-wrap" style={{padding:'4px 8px'}}>
-                            <span style={{fontSize:11}}>R</span>
-                            <input
-                              type="number"
-                              value={partObj.price || 0}
-                              onChange={e => handlePartPriceChange(key, idx, e.target.value)}
-                              min={0}
-                              step={10}
-                              style={{width:60,fontSize:13}}
-                            />
-                          </div>
-                          
-                          {isEditing && (
-                            <button
-                              onClick={() => handleRemovePart(key, idx)}
-                              style={{background:'rgba(255,80,80,0.08)',border:'1px solid rgba(255,80,80,0.2)',borderRadius:6,padding:'2px 7px',cursor:'pointer',color:'var(--red)',fontSize:11,fontWeight:700,fontFamily:'JetBrains Mono',flexShrink:0,lineHeight:1.4}}
-                            >×</button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {isEditing && (
-                    <div style={{marginTop:10}}>
-                      {isAddingHere ? (
-                        <div style={{display:'flex',gap:6,marginTop:6}}>
-                          <input
-                            className="field"
-                            style={{padding:'7px 12px',fontSize:12,flex:1}}
-                            placeholder="Part name…"
-                            value={newPartName}
-                            onChange={e => setNewPartName(e.target.value)}
-                            onKeyDown={e => { if(e.key==='Enter') handleAddPart(key); if(e.key==='Escape'){ setAddingPartTo(null); setNewPartName(''); } }}
-                            autoFocus
-                          />
-                          <button className="btn-p" style={{padding:'7px 14px',fontSize:12}} onClick={() => handleAddPart(key)}>Add</button>
-                          <button className="btn-g" style={{padding:'7px 10px',fontSize:12}} onClick={() => { setAddingPartTo(null); setNewPartName(''); }}>✕</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => { setAddingPartTo(key); setNewPartName(''); }}
-                          style={{width:'100%',marginTop:6,padding:'7px',borderRadius:10,border:'1px dashed var(--accent)',background:'rgba(77,123,255,0.04)',color:'var(--accent)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'Inter',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}
-                        >
-                          <IPlus/> Add new part
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <button onClick={() => setEditingKey(isEditing ? null : key)}
+                    style={{background:isEditing?'rgba(77,123,255,0.15)':'var(--input-bg)',border:`1px solid ${isEditing?'rgba(77,123,255,0.4)':'var(--border)'}`,borderRadius:8,padding:'5px 8px',cursor:'pointer',color:isEditing?'var(--accent)':'var(--text3)',display:'flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,transition:'all .15s'}}
+                  >
+                    <IEdit/> {isEditing ? 'Done' : 'Edit'}
+                  </button>
+                  <button onClick={() => handleRemoveCategory(key)} title="Remove Category"
+                    style={{background:'rgba(255,80,80,0.05)', border:'1px solid rgba(255,80,80,0.1)', color:'var(--red)', borderRadius:8, padding:'5px', cursor:'pointer', transition:'all .15s'}}>
+                    <ITrash/>
+                  </button>
                 </div>
-              );
-            })}
-          </div>
 
-          {filtered.length === 0 && (
-            <div style={{textAlign:'center',padding:'60px 24px',color:'var(--text3)',fontSize:14}}>
-              No categories match "{search}"
-            </div>
-          )}
-
-          <div className="parts-save-banner">
-            <div>
-              <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
-                {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
-              </p>
-              <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
-                Saved to: <span className="mono" style={{fontSize:11}}>
-                  {selectedMake === 'default' ? 'Global Default Pricing' : `Overrides Pricing for ${selectedMake}`}
-                </span>
-              </p>
-            </div>
-            <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
-              {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save Pricing</>}
-            </button>
-          </div>
-        </>
+                <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                  {(data.parts || []).map((part, idx) => {
+                    const partObj = typeof part === 'string' ? {name: part, price: 0} : part;
+                    return (
+                      <div key={idx} className="part-item">
+                        <span className="part-dot"/>
+                        <span style={{flex:1,fontSize:12,color:'var(--text2)',textOverflow:'ellipsis',overflow:'hidden',whiteSpace:'nowrap'}} title={partObj.name}>{partObj.name}</span>
+                        
+                        <div className="price-input-wrap" style={{padding:'4px 8px'}}>
+                          <span style={{fontSize:11}}>R</span>
+                          <input type="number" value={partObj.price || 0} onChange={e => handlePartPriceChange(key, idx, e.target.value)} min={0} step={10} style={{width:60,fontSize:13}}/>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
+
+      {localParts !== null && (
+        <div className="parts-save-banner">
+          <div>
+            <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>
+              {dirty ? '⚠ You have unsaved changes' : '✓ All changes saved to Firebase'}
+            </p>
+            <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>
+              Saved to: <span className="mono" style={{fontSize:11}}>
+                {selectedMake === 'default' ? 'Global Default Pricing' : `Overrides Pricing for ${selectedMake}`}
+              </span>
+            </p>
+          </div>
+          <button className="btn-p" onClick={save} disabled={saving || !dirty} style={{padding:'10px 22px',fontSize:13}}>
+            {saving ? <ISpin cls="w-4 h-4"/> : <><ISave/> Save Pricing</>}
+          </button>
+        </div>
+      )}
+
+      {/* MASTER DRAWER */}
+      <div className={`drawer ${drawerOpen ? 'open' : ''}`}>
+         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+            <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Master Categories</h3>
+            <button onClick={() => setDrawerOpen(false)} style={{background:'var(--input-bg)', border:'none', color:'var(--text3)', borderRadius:8, padding:4, cursor:'pointer'}}><IClose/></button>
+         </div>
+         <p style={{fontSize:12,color:'var(--text2)',marginBottom:16}}><b>Drag</b> these cards into the main window to add them to the {selectedMake} catalog.</p>
+         
+         <div style={{flex:1, overflowY:'auto', paddingRight:4}}>
+            {Object.entries(masterCategories).map(([mKey, mData]) => {
+               const alreadyAdded = localParts && localParts[mKey];
+               return (
+                 <div key={mKey} draggable={!alreadyAdded} onDragStart={(e) => handleDragStart(e, mKey)} className="master-cat-card" style={{opacity: alreadyAdded ? 0.4 : 1, cursor: alreadyAdded ? 'not-allowed' : 'grab'}}>
+                    <span style={{fontSize:20}}>{mData.icon}</span>
+                    <div style={{flex:1}}>
+                       <p style={{fontSize:13, fontWeight:700, color:'var(--text)', margin:0}}>{mKey}</p>
+                       <p style={{fontSize:10, color:'var(--text3)', margin:0}}>{(mData.template||[]).length} template parts</p>
+                    </div>
+                    {alreadyAdded && <span style={{fontSize:10, fontWeight:700, color:'var(--accent)'}}><ICheck/> Added</span>}
+                 </div>
+               );
+            })}
+         </div>
+
+         <div style={{marginTop:16, borderTop:'1px solid var(--border)', paddingTop:16}}>
+            <p style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:10,letterSpacing:'0.5px'}}>CREATE NEW MASTER CATEGORY</p>
+            <div style={{display:'flex', gap:8, marginBottom:10}}>
+               <input className="field" style={{width:'50px', textAlign:'center', padding:'8px'}} value={newCatIcon} onChange={e=>setNewCatIcon(e.target.value)} maxLength={2} title="Emoji Icon"/>
+               <input className="field" style={{flex:1, padding:'8px 12px'}} placeholder="Category Name..." value={newCatName} onChange={e=>setNewCatName(e.target.value)}/>
+            </div>
+            <button className="btn-g" onClick={createMasterCategory} disabled={!newCatName.trim()} style={{width:'100%', justifyContent:'center'}}><IPlus/> Save to Master List</button>
+         </div>
+      </div>
+      {drawerOpen && <div className="modal-overlay" style={{zIndex:201}} onClick={() => setDrawerOpen(false)} />}
     </div>
   );
 }
@@ -898,17 +1030,19 @@ function JobsView({ jobs, shopInfo }){
   },[jobs]);
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
   const filtered=useMemo(()=>{if(!jobs)return[];let r=jobs;if(filter!=='all')r=r.filter(j=>j.status===filter);if(search.trim()){const q=search.toLowerCase();r=r.filter(j=>`${j.vehicle?.make} ${j.vehicle?.model} ${j.vehicle?.reg} ${j.mechanic?.name}`.toLowerCase().includes(q));}return r;},[jobs,filter,search]);
-  const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
+  const revenue=jobs?jobs.filter(j=>['approved','in_progress','waiting_parts','ready_for_qa','completed'].includes(j.status)).reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
   return(
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       {newAlert&&<div className="anim-up" style={{padding:'12px 18px',borderRadius:14,background:'rgba(77,123,255,0.12)',border:'1px solid rgba(77,123,255,0.3)',display:'flex',alignItems:'center',gap:10}}><ISparkle/><span style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>New job received from mechanic!</span></div>}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
-        {[{l:'Total Jobs',v:jobs?jobs.length:'–',c:'var(--accent)'},{l:'Pending',v:jobs?jobs.filter(j=>j.status==='pending_approval').length:'–',c:'var(--amber)'},{l:'Approved',v:jobs?jobs.filter(j=>j.status==='approved').length:'–',c:'var(--green)'},{l:'Revenue',v:jobs?`R ${Math.round(revenue).toLocaleString()}`:'–',c:'var(--green)'}].map(s=>(
+        {[{l:'Total Jobs',v:jobs?jobs.length:'–',c:'var(--accent)'},{l:'Pending Approval',v:jobs?jobs.filter(j=>j.status==='pending_approval').length:'–',c:'var(--amber)'},{l:'Active Jobs',v:jobs?jobs.filter(j=>['approved','in_progress','waiting_parts','ready_for_qa'].includes(j.status)).length:'–',c:'var(--cyan)'},{l:'Est. Revenue',v:jobs?`R ${Math.round(revenue).toLocaleString()}`:'–',c:'var(--green)'}].map(s=>(
           <div key={s.l} className="stat-card"><p style={{fontSize:10,fontWeight:700,color:'var(--text3)',marginBottom:8,letterSpacing:'0.5px'}}>{s.l.toUpperCase()}</p><p className="mono" style={{fontSize:22,fontWeight:800,color:s.c,margin:0}}>{s.v}</p></div>
         ))}
       </div>
       <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',justifyContent:'space-between'}}>
-        <div style={{display:'flex',gap:6}}>{[['all','All'],['pending_approval','Pending'],['approved','Approved'],['rejected','Rejected']].map(([val,lbl])=><button key={val} className={`tab-btn ${filter===val?'active':''}`} onClick={()=>setFilter(val)}>{lbl}</button>)}</div>
+        <div style={{display:'flex',gap:6, overflowX:'auto', paddingBottom:4}}>
+           {[['all','All'],['pending_approval','Pending'],['in_progress','In Progress'],['waiting_parts','Waiting Parts'],['ready_for_qa','QA'],['completed','Completed'],['rejected','Rejected']].map(([val,lbl])=><button key={val} className={`tab-btn ${filter===val?'active':''}`} onClick={()=>setFilter(val)}>{lbl}</button>)}
+        </div>
         <div style={{position:'relative'}}><div style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div><input className="search-input" style={{paddingLeft:36,width:240}} placeholder="Search jobs…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
       </div>
       <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden'}}>
@@ -921,7 +1055,9 @@ function JobsView({ jobs, shopInfo }){
         </div>
         {jobs===null?<div style={{padding:16,display:'flex',flexDirection:'column',gap:8}}>{[1,2,3,4].map(i=><div key={i} className="skel" style={{height:48}}/>)}</div>
         :filtered.length===0?<div style={{textAlign:'center',padding:'48px 24px',color:'var(--text3)',fontSize:14}}>No jobs match this filter.</div>
-        :filtered.map(job=>(
+        :filtered.map(job=>{
+          const sUI = getStatusUI(job.status);
+          return(
           <div key={job.id} className="job-row" onClick={()=>setSelected(job)}>
             <div style={{display:'grid',gridTemplateColumns:'2fr 1.5fr 1.2fr 1fr 1fr 120px',gap:16,padding:'14px 20px',alignItems:'center'}}>
               <div><p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{job.vehicle?.make} {job.vehicle?.model}</p><p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.vehicle?.engine}</p></div>
@@ -930,12 +1066,12 @@ function JobsView({ jobs, shopInfo }){
               <span style={{fontSize:13,fontWeight:600,color:'var(--text2)'}}>{(job.services||[]).length} service(s)</span>
               <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>R {(job.financials?.grandTotal||0).toFixed(0)}</span>
               <div style={{display:'flex',gap:6,alignItems:'center',justifyContent:'space-between'}}>
-                <span style={{padding:'3px 9px',borderRadius:100,fontSize:9,fontWeight:700,fontFamily:'JetBrains Mono',background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='rejected'?'rgba(255,80,80,0.1)':'rgba(255,184,0,0.1)',color:job.status==='approved'?'var(--green)':job.status==='rejected'?'var(--red)':'var(--amber)',border:`1px solid ${job.status==='approved'?'rgba(0,255,136,0.2)':job.status==='rejected'?'rgba(255,80,80,0.2)':'rgba(255,184,0,0.2)'}`}}>{job.status==='pending_approval'?'PENDING':job.status==='approved'?'APPROVED':'REJECTED'}</span>
+                <span style={{padding:'3px 9px',borderRadius:100,fontSize:9,fontWeight:700,fontFamily:'JetBrains Mono',background:sUI.bg,color:sUI.c,border:`1px solid ${sUI.b}`}}>{sUI.l}</span>
                 <span style={{color:'var(--text3)',fontSize:12}}>›</span>
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
       {selected&&<JobModal job={selected} onClose={()=>setSelected(null)} onStatusChange={setStatus} shopInfo={shopInfo}/>}
     </div>
@@ -949,15 +1085,16 @@ function OverviewView({ jobs, shopInfo }){
   const [selected,setSelected]=useState(null);
   const setStatus=async(id,s)=>db.ref(`workshop_jobs/${id}`).update({status:s,updatedAt:Date.now()});
   const pending=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
-  const approved=jobs?jobs.filter(j=>j.status==='approved').length:0;
-  const revenue=jobs?jobs.filter(j=>j.status==='approved').reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
+  const activeJobs=jobs?jobs.filter(j=>['approved','in_progress','waiting_parts','ready_for_qa'].includes(j.status)).length:0;
+  const revenue=jobs?jobs.filter(j=>['approved','in_progress','waiting_parts','ready_for_qa','completed'].includes(j.status)).reduce((s,j)=>s+(j.financials?.grandTotal||0),0):0;
   const recent=jobs?jobs.slice(0,5):null;
   const svcCounts=useMemo(()=>{if(!jobs)return[];const c={};jobs.forEach(j=>(j.services||[]).forEach(s=>{c[s.name]=(c[s.name]||0)+1;}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5);},[jobs]);
+  
   return(
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       <div><h2 style={{fontSize:22,fontWeight:900,color:'var(--text)',margin:0}}>Admin Overview</h2><p style={{fontSize:13,color:'var(--text2)',margin:'4px 0 0'}}>Real-time workshop intelligence</p></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
-        {[{l:'Pending Approval',v:pending,c:'var(--amber)',icon:'⏳',sub:'Awaiting your review'},{l:'Approved Today',v:approved,c:'var(--green)',icon:'✅',sub:'Revenue generating'},{l:'Approved Revenue',v:`R ${Math.round(revenue).toLocaleString()}`,c:'var(--green)',icon:'💰',sub:'Incl. VAT'}].map(s=>(
+        {[{l:'Pending Approval',v:pending,c:'var(--amber)',icon:'⏳',sub:'Awaiting your review'},{l:'Active Floor Jobs',v:activeJobs,c:'var(--cyan)',icon:'🔧',sub:'Currently in the workshop'},{l:'Est. Pipeline Revenue',v:`R ${Math.round(revenue).toLocaleString()}`,c:'var(--green)',icon:'💰',sub:'Incl. VAT'}].map(s=>(
           <div key={s.l} className="stat-card" style={{display:'flex',flexDirection:'column',gap:10}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><p style={{fontSize:10,fontWeight:700,color:'var(--text3)',margin:0,letterSpacing:'0.5px'}}>{s.l.toUpperCase()}</p><span style={{fontSize:20}}>{s.icon}</span></div>
             <p className="mono" style={{fontSize:26,fontWeight:900,color:s.c,margin:0}}>{s.v}</p>
@@ -970,13 +1107,15 @@ function OverviewView({ jobs, shopInfo }){
           <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:8}}><h3 style={{fontSize:14,fontWeight:800,color:'var(--text)',margin:0}}>Recent Arrivals</h3><span style={{fontSize:10,color:'var(--green)',fontFamily:'JetBrains Mono',fontWeight:600,display:'flex',alignItems:'center'}}><span className="live-dot"/>LIVE</span></div>
           {recent===null?<div style={{padding:12}}>{[1,2,3].map(i=><div key={i} className="skel" style={{height:44,marginBottom:8}}/>)}</div>
           :recent.length===0?<p style={{padding:20,color:'var(--text3)',fontSize:13}}>No jobs yet.</p>
-          :recent.map(job=>(
+          :recent.map(job=>{
+            const sUI = getStatusUI(job.status);
+            return(
             <div key={job.id} onClick={()=>setSelected(job)} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 18px',borderBottom:'1px solid var(--border2)',cursor:'pointer',transition:'background .12s'}} className="job-row">
               <div style={{width:34,height:34,borderRadius:10,background:'rgba(77,123,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)',flexShrink:0}}><ICar/></div>
               <div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{job.vehicle?.make} {job.vehicle?.model}</p><p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.mechanic?.name} · {job.vehicle?.reg}</p></div>
-              <span style={{padding:'2px 8px',borderRadius:100,fontSize:9,fontWeight:700,fontFamily:'JetBrains Mono',background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='pending_approval'?'rgba(255,184,0,0.1)':'rgba(255,80,80,0.1)',color:job.status==='approved'?'var(--green)':job.status==='pending_approval'?'var(--amber)':'var(--red)',border:'1px solid transparent',flexShrink:0}}>{job.status==='pending_approval'?'PENDING':job.status?.toUpperCase()}</span>
+              <span style={{padding:'2px 8px',borderRadius:100,fontSize:9,fontWeight:700,fontFamily:'JetBrains Mono',background:sUI.bg,color:sUI.c,border:`1px solid ${sUI.b}`,flexShrink:0}}>{sUI.l}</span>
             </div>
-          ))}
+          )})}
         </div>
         <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,overflow:'hidden'}}>
           <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)'}}><h3 style={{fontSize:14,fontWeight:800,color:'var(--text)',margin:0}}>Most Requested Services</h3></div>
@@ -1060,27 +1199,22 @@ function App(){
           if(snap.exists())setProfile(snap.val());
           else{const d={name:u.displayName||'Admin',shop:'VynixPanelB Admin'};ref.set(d);setProfile(d);}
         });
-        setReady(true);
       }
     });
   },[]);
 
+  // Shimmering and Persistence Loader Logic
   useEffect(()=>{
     const sysRef=db.ref('system');
     const sysCb=sysRef.on('value',snap=>{
       if(snap.exists()){
-        const val=snap.val();
-        // Seed if missing
-        if(!val.parts_catalog) {
-          db.ref('system/parts_catalog').set(DEFAULT_PARTS_CATALOG);
-          val.parts_catalog=DEFAULT_PARTS_CATALOG;
-        }
-        setSystemData(val);
+        setSystemData(snap.val());
       } else {
-        const seed={car_db:DEFAULT_CAR_DB,services:DEFAULT_SERVICE_CATALOG,parts_catalog:DEFAULT_PARTS_CATALOG};
+        const seed={car_db:DEFAULT_CAR_DB, master_categories:DEFAULT_MASTER_CATEGORIES};
         sysRef.set(seed);
         setSystemData(seed);
       }
+      setReady(true);
     });
     return()=>sysRef.off('value',sysCb);
   },[]);
@@ -1097,7 +1231,7 @@ function App(){
     return()=>ref.off('value',cb);
   },[]);
 
-  if(!ready||!user||!systemData)return null;
+  if(!ready||!user||!systemData) return null;
 
   const NAV_ITEMS=[
     {id:'overview',l:'Overview',I:IDash},
