@@ -211,21 +211,28 @@ const auth=firebase.auth(), db=firebase.database();
 const LABOR=750;
 
 /* ════════════════════════════════════════════════════════════
-   COMPREHENSIVE DEFAULT CATALOG
+   COMPREHENSIVE DEFAULT CATALOG (HEAVILY EXPANDED)
    ════════════════════════════════════════════════════════════ */
 const DEFAULT_MASTER_CATEGORIES = {
-  "Engine Oil & Filter": { icon: "🛢", template: [{name:"Engine Oil (5L)",price:0}, {name:"Oil Filter",price:0}, {name:"Drain Plug Washer",price:0}] },
+  "Engine Oil & Filter": { icon: "🛢", template: [{name:"Engine Oil (5L)",price:0}, {name:"Oil Filter",price:0}, {name:"Drain Plug Washer",price:0}, {name:"Synthetic Oil Surcharge",price:0}] },
   "Air & Cabin Filters": { icon: "🌬", template: [{name:"Air Filter Element",price:0}, {name:"Cabin Air Filter / Pollen Filter",price:0}] },
-  "Spark Plugs & Ignition": { icon: "⚡", template: [{name:"Iridium Spark Plugs (Set of 4)",price:0}, {name:"Ignition Coil",price:0}] },
-  "Brake System (Front)": { icon: "🔴", template: [{name:"Front Brake Pads (Set)",price:0}, {name:"Front Brake Discs (Pair)",price:0}, {name:"Brake Fluid (500ml)",price:0}] },
-  "Brake System (Rear)": { icon: "🛑", template: [{name:"Rear Brake Pads (Set)",price:0}, {name:"Rear Brake Discs (Pair)",price:0}] },
-  "Battery & Electrical": { icon: "🔋", template: [{name:"12V Lead Acid Battery",price:0}, {name:"AGM Start-Stop Battery",price:0}, {name:"Alternator",price:0}] },
-  "Wipers & Vision": { icon: "🌧", template: [{name:"Front Wiper Blade Pair",price:0}, {name:"Rear Wiper Blade",price:0}, {name:"Screenwash (1L)",price:0}] },
-  "Cooling System": { icon: "❄️", template: [{name:"Engine Coolant / Antifreeze (5L)",price:0}, {name:"Water Pump",price:0}, {name:"Thermostat",price:0}] },
-  "Belts & Timing": { icon: "⚙️", template: [{name:"Serpentine / Drive Belt",price:0}, {name:"Timing Belt Kit",price:0}, {name:"Tensioner Pulley",price:0}] },
-  "Suspension & Steering": { icon: "🛣", template: [{name:"Front Shock Absorbers (Pair)",price:0}, {name:"Rear Shock Absorbers (Pair)",price:0}, {name:"Tie Rod Ends",price:0}, {name:"Control Arm",price:0}] },
-  "Transmission & Drivetrain": { icon: "🕹", template: [{name:"Automatic Transmission Fluid (ATF)",price:0}, {name:"Manual Gearbox Oil",price:0}, {name:"Clutch Kit",price:0}] },
-  "Fuel System": { icon: "⛽", template: [{name:"Fuel Filter",price:0}, {name:"Fuel Pump",price:0}, {name:"Fuel Injector Cleaner",price:0}] }
+  "Spark Plugs & Ignition": { icon: "⚡", template: [{name:"Iridium Spark Plugs (Set of 4)",price:0}, {name:"Platinum Spark Plugs (Set of 4)",price:0}, {name:"Ignition Coil",price:0}, {name:"Spark Plug Wires/Cables",price:0}] },
+  "Brake System (Front)": { icon: "🔴", template: [{name:"Front Brake Pads (Set)",price:0}, {name:"Front Brake Discs (Pair)",price:0}, {name:"Front Brake Caliper",price:0}, {name:"Brake Fluid (500ml)",price:0}] },
+  "Brake System (Rear)": { icon: "🛑", template: [{name:"Rear Brake Pads (Set)",price:0}, {name:"Rear Brake Discs (Pair)",price:0}, {name:"Rear Brake Caliper",price:0}, {name:"Brake Shoes",price:0}, {name:"Wheel Cylinder",price:0}, {name:"Drum Hardware Kit",price:0}] },
+  "Battery & Electrical": { icon: "🔋", template: [{name:"12V Lead Acid Battery",price:0}, {name:"AGM Start-Stop Battery",price:0}, {name:"Alternator",price:0}, {name:"Starter Motor",price:0}, {name:"Battery Terminals",price:0}, {name:"Fuses/Relays (Assorted)",price:0}] },
+  "Wipers & Vision": { icon: "🌧", template: [{name:"Front Wiper Blade Pair",price:0}, {name:"Rear Wiper Blade",price:0}, {name:"Screenwash (1L)",price:0}, {name:"Wiper Motor",price:0}, {name:"Washer Pump",price:0}] },
+  "Cooling System": { icon: "❄️", template: [{name:"Engine Coolant / Antifreeze (5L)",price:0}, {name:"Water Pump",price:0}, {name:"Thermostat",price:0}, {name:"Radiator",price:0}, {name:"Radiator Hoses (Upper/Lower)",price:0}, {name:"Cooling Fan Assembly",price:0}] },
+  "Belts & Timing": { icon: "⚙️", template: [{name:"Serpentine / Drive Belt",price:0}, {name:"Timing Belt Kit",price:0}, {name:"Tensioner Pulley",price:0}, {name:"Idler Pulley",price:0}, {name:"Timing Chain Kit",price:0}] },
+  "Suspension & Steering": { icon: "🛣", template: [{name:"Front Shock Absorbers (Pair)",price:0}, {name:"Rear Shock Absorbers (Pair)",price:0}, {name:"Tie Rod Ends",price:0}, {name:"Control Arm (Lower/Upper)",price:0}, {name:"Stabilizer/Sway Bar Links",price:0}, {name:"Power Steering Fluid",price:0}, {name:"Power Steering Pump",price:0}, {name:"Steering Rack",price:0}] },
+  "Transmission & Drivetrain": { icon: "🕹", template: [{name:"Automatic Transmission Fluid (ATF)",price:0}, {name:"Manual Gearbox Oil",price:0}, {name:"Clutch Kit",price:0}, {name:"CV Joint / Boot Kit",price:0}, {name:"Driveshaft / Propeller Shaft",price:0}, {name:"Flywheel",price:0}, {name:"Differential Fluid",price:0}] },
+  "Fuel System": { icon: "⛽", template: [{name:"Fuel Filter",price:0}, {name:"Fuel Pump",price:0}, {name:"Fuel Injector",price:0}, {name:"Fuel Injector Cleaner",price:0}, {name:"Gas Cap",price:0}] },
+  "Exhaust & Emissions": { icon: "💨", template: [{name:"Catalytic Converter",price:0}, {name:"Oxygen (O2) Sensor (Upstream)",price:0}, {name:"Oxygen (O2) Sensor (Downstream)",price:0}, {name:"Muffler / Silencer",price:0}, {name:"Exhaust Gasket",price:0}, {name:"EGR Valve",price:0}] },
+  "AC & Heating": { icon: "🌡", template: [{name:"AC Compressor",price:0}, {name:"AC Condenser",price:0}, {name:"Heater Core",price:0}, {name:"Refrigerant (Freon) Recharge",price:0}, {name:"Blower Motor",price:0}] },
+  "Lighting & Bulbs": { icon: "💡", template: [{name:"Headlight Bulb (Halogen)",price:0}, {name:"Headlight Bulb (LED/Xenon)",price:0}, {name:"Tail Light Bulb",price:0}, {name:"Indicator/Turn Signal Bulb",price:0}, {name:"Fog Light Bulb",price:0}] },
+  "Engine Sensors & Management": { icon: "🧠", template: [{name:"Mass Air Flow (MAF) Sensor",price:0}, {name:"Crankshaft Position Sensor",price:0}, {name:"Camshaft Position Sensor",price:0}, {name:"MAP Sensor",price:0}, {name:"Throttle Position Sensor",price:0}] },
+  "Body & Exterior": { icon: "🚗", template: [{name:"Side Mirror Glass",price:0}, {name:"Side Mirror Assembly",price:0}, {name:"Door Handle",price:0}, {name:"Mud Flaps",price:0}, {name:"Gas Struts (Trunk/Hood)",price:0}] },
+  "Wheels & Tires": { icon: "🛞", template: [{name:"Tire (Standard)",price:0}, {name:"Tire (Performance)",price:0}, {name:"TPMS Sensor",price:0}, {name:"Wheel Balancing & Alignment",price:0}, {name:"Wheel Bearing / Hub Assembly",price:0}, {name:"Lug Nuts (Set)",price:0}] },
+  "Fluids, Chemicals & Misc": { icon: "🧪", template: [{name:"Brake Cleaner",price:0}, {name:"Engine Degreaser",price:0}, {name:"WD-40 / Penetrating Oil",price:0}, {name:"Grease (Tub)",price:0}, {name:"Shop Rags / Consumables Surcharge",price:0}] }
 };
 
 const WORLD_CARS = {
